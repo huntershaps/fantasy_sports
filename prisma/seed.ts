@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { AWARD_CATALOG } from "../src/lib/awards/catalog";
+import { rebuildAllLeagues } from "../src/lib/engine/rebuild";
 import { createRng } from "./seed/rng";
 import { buildLeague, resetIdCounter } from "./seed/build-league";
 import {
@@ -126,6 +127,16 @@ async function main() {
   await buildLeague(ctx, LEAGUE_TWO, LEAGUE_TWO_MANAGERS, [
     2023, 2024, 2025, 2026,
   ]);
+
+  console.log("\nRunning the historical event engine…");
+  for (const summary of await rebuildAllLeagues(db)) {
+    console.log(
+      `  ${summary.leagueName.padEnd(22)} ` +
+        `${summary.currentRecords} records (${summary.records} incl. lineage), ` +
+        `${summary.awards} awards, ${summary.certificates} certificates, ` +
+        `${summary.memories} memories  [${summary.durationMs}ms]`,
+    );
+  }
 
   const counts = {
     users: await db.user.count(),
