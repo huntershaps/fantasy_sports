@@ -1,0 +1,862 @@
+// Museum of Fantasy Sports — data model
+//
+// Architectural intent:
+//   External Fantasy Platform -> Provider -> Normalized Data -> these tables
+//   -> Historical Event Engine -> Awards / Records / Memories -> Personalized UI
+//
+// Two invariants shape this schema:
+//   1. History is append-safe. A re-import of a season must never silently
+//      destroy admin corrections, so mutable rows carry `source` + `lockedFields`
+//      and every provider-sourced row has a natural key for idempotent upserts.
+//   2. A person's identity is separate from the team they fielded in a given
+//      year. User -> TeamMembership -> FantasyTeam -> Franchise makes
+//      "show me everything Hunter ever did" a single traversal.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum LeagueRole {
+  MEMBER
+  COMMISSIONER
+}
+
+enum ProviderType {
+  ESPN
+  YAHOO
+  SLEEPER
+  NFL
+  MANUAL
+}
+
+enum SeasonStatus {
+  UPCOMING
+  IN_PROGRESS
+  COMPLETE
+}
+
+enum MatchupType {
+  REGULAR
+  PLAYOFF
+  QUARTERFINAL
+  SEMIFINAL
+  CHAMPIONSHIP
+  THIRD_PLACE
+  CONSOLATION
+  BYE
+}
+
+enum LineupSlot {
+  QB
+  RB
+  WR
+  TE
+  FLEX
+  SUPER_FLEX
+  K
+  DST
+  DL
+  LB
+  DB
+  BENCH
+  IR
+}
+
+enum PlayerPosition {
+  QB
+  RB
+  WR
+  TE
+  K
+  DST
+  DL
+  LB
+  DB
+  UNKNOWN
+}
+
+enum TransactionType {
+  DRAFT
+  TRADE
+  WAIVER_ADD
+  FREE_AGENT_ADD
+  DROP
+  IR_PLACE
+  IR_ACTIVATE
+  COMMISSIONER
+}
+
+enum AwardTier {
+  LEGENDARY
+  GOLD
+  SILVER
+  BRONZE
+  SHAME
+  FUN
+}
+
+enum AwardScope {
+  WEEK
+  SEASON
+  CAREER
+  ALL_TIME
+}
+
+enum MemoryType {
+  MATCHUP
+  TRADE
+  WAIVER
+  DROP
+  DRAFT
+  RECORD
+  CHAMPIONSHIP
+  PLAYER_PERFORMANCE
+  MILESTONE
+  STREAK
+  RIVALRY
+}
+
+enum SubjectRole {
+  PRIMARY
+  OPPONENT
+  PARTICIPANT
+  MENTIONED
+}
+
+enum RecordCategory {
+  TEAM
+  PLAYER
+  MANAGER
+}
+
+// Where a row came from. Sync must never overwrite MANUAL rows or locked fields.
+enum ContentSource {
+  PROVIDER
+  AUTO
+  MANUAL
+  SEED
+}
+
+enum SyncStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+enum SyncMode {
+  FULL
+  INCREMENTAL
+  HISTORICAL
+}
+
+enum SyncSeverity {
+  WARNING
+  ERROR
+  FATAL
+}
+
+// ---------------------------------------------------------------------------
+// Identity & auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  name          String
+  displayName   String?
+  image         String?
+  bio           String?
+  role          UserRole  @default(USER)
+  isDisabled    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  leagueMemberships   LeagueMembership[]
+  teamMemberships     TeamMembership[]
+  awards              Award[]
+  memorySubjects      MemorySubject[]
+  heldRecords         LeagueRecord[]       @relation("RecordHolderUser")
+  triggeredSyncs      DataSync[]           @relation("SyncTriggeredBy")
+  verifiedRecords     LeagueRecord[]       @relation("RecordVerifiedBy")
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expires   DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// League structure
+// ---------------------------------------------------------------------------
+
+model League {
+  id           String       @id @default(cuid())
+  slug         String       @unique
+  name         String
+  tagline      String?
+  description  String?
+  logoUrl      String?
+  // Per-league visual identity layered over the shared design system.
+  accentColor  String       @default("#F5C518")
+  secondColor  String       @default("#0B7A75")
+  foundedYear  Int
+  provider     ProviderType @default(MANUAL)
+  isArchived   Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  settings            LeagueSettings?
+  providerCredential  ProviderCredential?
+  memberships         LeagueMembership[]
+  seasons             Season[]
+  franchises          Franchise[]
+  awards              Award[]
+  awardDefinitions    AwardDefinition[]
+  memories            Memory[]
+  records             LeagueRecord[]
+  syncs               DataSync[]
+
+  @@index([isArchived])
+}
+
+model LeagueSettings {
+  id                 String  @id @default(cuid())
+  leagueId           String  @unique
+  scoringType        String  @default("PPR")
+  teamCount          Int     @default(10)
+  playoffTeamCount   Int     @default(6)
+  regularSeasonWeeks Int     @default(14)
+  playoffWeeks       Int     @default(3)
+  tradeDeadlineWeek  Int?
+  faabBudget         Int?
+  // Roster slot counts, e.g. { "QB": 1, "RB": 2, "FLEX": 1 }
+  rosterSlots        Json    @default("{}")
+
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+}
+
+model LeagueMembership {
+  id       String     @id @default(cuid())
+  userId   String
+  leagueId String
+  role     LeagueRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, leagueId])
+  @@index([leagueId])
+}
+
+model Season {
+  id                 String       @id @default(cuid())
+  leagueId           String
+  year               Int
+  status             SeasonStatus @default(UPCOMING)
+  currentWeek        Int          @default(1)
+  regularSeasonWeeks Int          @default(14)
+  playoffWeeks       Int          @default(3)
+  championTeamId     String?      @unique
+  runnerUpTeamId     String?      @unique
+  startDate          DateTime?
+  endDate            DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  league       League        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  champion     FantasyTeam?  @relation("SeasonChampion", fields: [championTeamId], references: [id])
+  runnerUp     FantasyTeam?  @relation("SeasonRunnerUp", fields: [runnerUpTeamId], references: [id])
+  teams        FantasyTeam[]
+  matchups     Matchup[]
+  transactions RosterTransaction[]
+  trades       Trade[]
+  draftPicks   DraftPick[]
+  awards       Award[]
+  memories     Memory[]
+  records      LeagueRecord[]
+
+  @@unique([leagueId, year])
+  @@index([leagueId, year])
+}
+
+// A persistent team slot across seasons. Team names change year to year;
+// the franchise is what stays the same, which is what makes career
+// head-to-head records and "your team through the years" possible.
+model Franchise {
+  id                 String  @id @default(cuid())
+  leagueId           String
+  providerFranchiseId String?
+  name               String
+  logoUrl            String?
+  createdAt          DateTime @default(now())
+
+  league League        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  teams  FantasyTeam[]
+
+  @@unique([leagueId, providerFranchiseId])
+  @@index([leagueId])
+}
+
+// One team, in one season. This is the historical identity users browse.
+model FantasyTeam {
+  id             String        @id @default(cuid())
+  seasonId       String
+  franchiseId    String?
+  providerTeamId String?
+  name           String
+  abbreviation   String?
+  logoUrl        String?
+  wins           Int           @default(0)
+  losses         Int           @default(0)
+  ties           Int           @default(0)
+  pointsFor      Decimal       @default(0) @db.Decimal(10, 2)
+  pointsAgainst  Decimal       @default(0) @db.Decimal(10, 2)
+  regularSeasonRank Int?
+  finalRank      Int?
+  madePlayoffs   Boolean       @default(false)
+  source         ContentSource @default(PROVIDER)
+  lockedFields   String[]      @default([])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  season       Season              @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  franchise    Franchise?          @relation(fields: [franchiseId], references: [id])
+  memberships  TeamMembership[]
+  homeMatchups Matchup[]           @relation("HomeTeam")
+  awayMatchups Matchup[]           @relation("AwayTeam")
+  wonMatchups  Matchup[]           @relation("MatchupWinner")
+  lineupSlots  MatchupPlayer[]
+  transactions RosterTransaction[]
+  tradeItemsFrom TradeItem[]       @relation("TradeItemFrom")
+  tradeItemsTo   TradeItem[]       @relation("TradeItemTo")
+  draftPicks   DraftPick[]
+  awards       Award[]
+  memorySubjects MemorySubject[]
+  heldRecords  LeagueRecord[]      @relation("RecordHolderTeam")
+  championOf   Season?             @relation("SeasonChampion")
+  runnerUpOf   Season?             @relation("SeasonRunnerUp")
+
+  @@unique([seasonId, providerTeamId])
+  @@index([seasonId])
+  @@index([franchiseId])
+}
+
+// Links a real person to a team they managed. Supports co-owners, and lets a
+// team exist before it has been claimed by a registered user.
+model TeamMembership {
+  id            String   @id @default(cuid())
+  userId        String
+  fantasyTeamId String
+  isPrimary     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fantasyTeamId])
+  @@index([fantasyTeamId])
+}
+
+// ---------------------------------------------------------------------------
+// Games
+// ---------------------------------------------------------------------------
+
+model Player {
+  id               String         @id @default(cuid())
+  providerPlayerId String?
+  provider         ProviderType   @default(MANUAL)
+  fullName         String
+  position         PlayerPosition @default(UNKNOWN)
+  nflTeam          String?
+  headshotUrl      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  lineupSlots  MatchupPlayer[]
+  transactions RosterTransaction[]
+  tradeItems   TradeItem[]
+  draftPicks   DraftPick[]
+  awards       Award[]
+  heldRecords  LeagueRecord[]      @relation("RecordHolderPlayer")
+
+  @@unique([provider, providerPlayerId])
+  @@index([fullName])
+  @@index([position])
+}
+
+model Matchup {
+  id           String        @id @default(cuid())
+  seasonId     String
+  week         Int
+  type         MatchupType   @default(REGULAR)
+  homeTeamId   String
+  awayTeamId   String
+  homeScore    Decimal       @default(0) @db.Decimal(10, 2)
+  awayScore    Decimal       @default(0) @db.Decimal(10, 2)
+  winnerTeamId String?
+  isTie        Boolean       @default(false)
+  isComplete   Boolean       @default(false)
+  playedOn     DateTime?
+  source       ContentSource @default(PROVIDER)
+  lockedFields String[]      @default([])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  season   Season          @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  homeTeam FantasyTeam     @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeam FantasyTeam     @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  winner   FantasyTeam?    @relation("MatchupWinner", fields: [winnerTeamId], references: [id])
+  players  MatchupPlayer[]
+  awards   Award[]
+  memories Memory[]
+  records  LeagueRecord[]
+
+  @@unique([seasonId, week, homeTeamId, awayTeamId])
+  @@index([seasonId, week])
+  @@index([playedOn])
+}
+
+model MatchupPlayer {
+  id              String     @id @default(cuid())
+  matchupId       String
+  fantasyTeamId   String
+  playerId        String
+  slot            LineupSlot
+  isStarter       Boolean    @default(true)
+  points          Decimal    @default(0) @db.Decimal(10, 2)
+  projectedPoints Decimal?   @db.Decimal(10, 2)
+
+  matchup Matchup     @relation(fields: [matchupId], references: [id], onDelete: Cascade)
+  team    FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+  player  Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchupId, fantasyTeamId, playerId])
+  @@index([matchupId])
+  @@index([playerId])
+  @@index([points])
+}
+
+// ---------------------------------------------------------------------------
+// Transactions
+// ---------------------------------------------------------------------------
+
+model RosterTransaction {
+  id            String          @id @default(cuid())
+  seasonId      String
+  fantasyTeamId String
+  playerId      String
+  type          TransactionType
+  week          Int?
+  occurredOn    DateTime
+  faabSpent     Int?
+  waiverPriority Int?
+  tradeId       String?
+  notes         String?
+  providerTxnId String?
+  source        ContentSource   @default(PROVIDER)
+  createdAt     DateTime        @default(now())
+
+  season   Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  team     FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+  player   Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  trade    Trade?      @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+  memories Memory[]
+
+  @@unique([seasonId, providerTxnId, playerId, type])
+  @@index([seasonId, occurredOn])
+  @@index([fantasyTeamId])
+  @@index([playerId])
+}
+
+model Trade {
+  id            String        @id @default(cuid())
+  seasonId      String
+  week          Int?
+  occurredOn    DateTime
+  providerTradeId String?
+  notes         String?
+  source        ContentSource @default(PROVIDER)
+  createdAt     DateTime      @default(now())
+
+  season       Season              @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  items        TradeItem[]
+  transactions RosterTransaction[]
+  memories     Memory[]
+
+  @@unique([seasonId, providerTradeId])
+  @@index([seasonId, occurredOn])
+}
+
+// One leg of a trade. A trade is a bag of items moving between teams, which
+// keeps 3-team trades and pick/FAAB swaps representable.
+model TradeItem {
+  id         String  @id @default(cuid())
+  tradeId    String
+  fromTeamId String
+  toTeamId   String
+  playerId   String?
+  draftPickId String?
+  faabAmount Int?
+
+  trade     Trade       @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  fromTeam  FantasyTeam @relation("TradeItemFrom", fields: [fromTeamId], references: [id], onDelete: Cascade)
+  toTeam    FantasyTeam @relation("TradeItemTo", fields: [toTeamId], references: [id], onDelete: Cascade)
+  player    Player?     @relation(fields: [playerId], references: [id])
+  draftPick DraftPick?  @relation(fields: [draftPickId], references: [id])
+
+  @@index([tradeId])
+}
+
+model DraftPick {
+  id            String   @id @default(cuid())
+  seasonId      String
+  fantasyTeamId String
+  playerId      String?
+  round         Int
+  pickInRound   Int
+  overallPick   Int
+  isKeeper      Boolean  @default(false)
+  auctionAmount Int?
+  occurredOn    DateTime?
+
+  season     Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  team       FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+  player     Player?     @relation(fields: [playerId], references: [id])
+  tradeItems TradeItem[]
+
+  @@unique([seasonId, overallPick])
+  @@index([seasonId])
+  @@index([fantasyTeamId])
+}
+
+// ---------------------------------------------------------------------------
+// Awards & certificates
+// ---------------------------------------------------------------------------
+
+// The catalog entry. Built-ins ship with the app; Super Admin can add custom
+// definitions scoped to one league (leagueId set) or all leagues (null).
+model AwardDefinition {
+  id                  String     @id @default(cuid())
+  key                 String
+  leagueId            String?
+  name                String
+  icon                String
+  description         String
+  tier                AwardTier  @default(GOLD)
+  scope               AwardScope @default(SEASON)
+  accentColor         String     @default("#F5C518")
+  isBuiltIn           Boolean    @default(false)
+  isActive            Boolean    @default(true)
+  grantsCertificate   Boolean    @default(false)
+  certificateTemplate String?
+  sortOrder           Int        @default(0)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  league League? @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  awards Award[]
+
+  @@unique([key, leagueId])
+  @@index([leagueId])
+}
+
+model Award {
+  id            String        @id @default(cuid())
+  definitionId  String
+  leagueId      String
+  seasonId      String?
+  week          Int?
+  userId        String?
+  fantasyTeamId String?
+  playerId      String?
+  matchupId     String?
+  // Overrides the definition's name/description when this instance needs
+  // specific wording, e.g. "Highest Score — Week 7".
+  titleOverride String?
+  description   String?
+  // Award-specific figures rendered on the card, e.g. { "points": 178.42 }.
+  stats         Json          @default("{}")
+  imageUrl      String?
+  isFeatured    Boolean       @default(false)
+  source        ContentSource @default(AUTO)
+  dedupeKey     String?       @unique
+  awardedOn     DateTime
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  definition  AwardDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  league      League          @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  season      Season?         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  user        User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  team        FantasyTeam?    @relation(fields: [fantasyTeamId], references: [id], onDelete: SetNull)
+  player      Player?         @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  matchup     Matchup?        @relation(fields: [matchupId], references: [id], onDelete: SetNull)
+  certificate Certificate?
+
+  @@index([leagueId, seasonId])
+  @@index([userId])
+  @@index([fantasyTeamId])
+  @@index([awardedOn])
+}
+
+model Certificate {
+  id             String   @id @default(cuid())
+  awardId        String   @unique
+  serialNumber   String   @unique
+  template       String   @default("classic")
+  recipientName  String
+  title          String
+  subtitle       String?
+  leagueName     String
+  seasonLabel    String
+  // Extra template fields (signature line, stat callouts, background choice).
+  data           Json     @default("{}")
+  issuedOn       DateTime @default(now())
+
+  award Award @relation(fields: [awardId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Memories
+// ---------------------------------------------------------------------------
+
+// A structured historical event. `template` + `data` are what the UI renders,
+// so the same memory can read "YOU beat Noah" or "Noah beat YOU" depending on
+// who is looking. Never store pre-personalized prose as the only representation.
+model Memory {
+  id           String        @id @default(cuid())
+  leagueId     String
+  seasonId     String?
+  week         Int?
+  type         MemoryType
+  // The date the event actually happened — drives "this day in league history".
+  occurredOn   DateTime
+  template     String
+  data         Json          @default("{}")
+  // Neutral third-person fallback, used for search and non-personalized views.
+  headline     String
+  body         String?
+  // 0-100. Governs feed ordering and what gets surfaced on the dashboard.
+  importance   Int           @default(50)
+  imageUrl     String?
+  isFeatured   Boolean       @default(false)
+  isHidden     Boolean       @default(false)
+  source       ContentSource @default(AUTO)
+  // Stable hash of the source event so regeneration updates instead of duplicating.
+  dedupeKey    String?       @unique
+  matchupId    String?
+  tradeId      String?
+  transactionId String?
+  recordId     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  league      League             @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  season      Season?            @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  matchup     Matchup?           @relation(fields: [matchupId], references: [id], onDelete: SetNull)
+  trade       Trade?             @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+  transaction RosterTransaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  record      LeagueRecord?      @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  subjects    MemorySubject[]
+
+  @@index([leagueId, occurredOn])
+  @@index([type])
+  @@index([importance])
+}
+
+// Who a memory is about, and in what capacity. This is the join that makes
+// personalization possible: filter memories where subject.userId = viewer.
+model MemorySubject {
+  id            String      @id @default(cuid())
+  memoryId      String
+  userId        String?
+  fantasyTeamId String?
+  role          SubjectRole @default(PARTICIPANT)
+
+  memory Memory       @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  user   User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   FantasyTeam? @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([memoryId, userId, fantasyTeamId, role])
+  @@index([userId])
+  @@index([fantasyTeamId])
+}
+
+// ---------------------------------------------------------------------------
+// Records
+// ---------------------------------------------------------------------------
+
+// `isCurrent` + `previousRecordId` keep the full lineage of a record, which is
+// what lets the engine emit "the league record was broken today" memories.
+model LeagueRecord {
+  id               String         @id @default(cuid())
+  leagueId         String
+  category         RecordCategory
+  key              String
+  label            String
+  value            Decimal        @db.Decimal(12, 2)
+  displayValue     String
+  description      String?
+  seasonId         String?
+  week             Int?
+  matchupId        String?
+  holderUserId     String?
+  holderTeamId     String?
+  holderPlayerId   String?
+  occurredOn       DateTime
+  isCurrent        Boolean        @default(true)
+  previousRecordId String?        @unique
+  source           ContentSource  @default(AUTO)
+  lockedFields     String[]       @default([])
+  verifiedByUserId String?
+  verifiedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  league       League        @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  season       Season?       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  matchup      Matchup?      @relation(fields: [matchupId], references: [id], onDelete: SetNull)
+  holderUser   User?         @relation("RecordHolderUser", fields: [holderUserId], references: [id], onDelete: SetNull)
+  holderTeam   FantasyTeam?  @relation("RecordHolderTeam", fields: [holderTeamId], references: [id], onDelete: SetNull)
+  holderPlayer Player?       @relation("RecordHolderPlayer", fields: [holderPlayerId], references: [id], onDelete: SetNull)
+  verifiedBy   User?         @relation("RecordVerifiedBy", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+  previous     LeagueRecord? @relation("RecordLineage", fields: [previousRecordId], references: [id])
+  superseded   LeagueRecord? @relation("RecordLineage")
+  memories     Memory[]
+
+  @@index([leagueId, key, isCurrent])
+  @@index([category])
+}
+
+// ---------------------------------------------------------------------------
+// Provider sync
+// ---------------------------------------------------------------------------
+
+// Credentials are encrypted at rest; the plaintext never leaves the server.
+model ProviderCredential {
+  id            String       @id @default(cuid())
+  leagueId      String       @unique
+  provider      ProviderType
+  // Encrypted JSON blob: ESPN {swid, espnS2}, Yahoo {refreshToken, ...}.
+  encryptedData String
+  providerLeagueId String?
+  expiresAt     DateTime?
+  lastCheckedAt DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  league League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+}
+
+model DataSync {
+  id                String       @id @default(cuid())
+  leagueId          String
+  provider          ProviderType
+  mode              SyncMode     @default(INCREMENTAL)
+  status            SyncStatus   @default(PENDING)
+  seasonYears       Int[]        @default([])
+  startedAt         DateTime     @default(now())
+  finishedAt        DateTime?
+  recordsCreated    Int          @default(0)
+  recordsUpdated    Int          @default(0)
+  recordsSkipped    Int          @default(0)
+  memoriesCreated   Int          @default(0)
+  awardsCreated     Int          @default(0)
+  leagueRecordsSet  Int          @default(0)
+  triggeredByUserId String?
+  summary           Json         @default("{}")
+
+  league      League          @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  triggeredBy User?           @relation("SyncTriggeredBy", fields: [triggeredByUserId], references: [id], onDelete: SetNull)
+  errors      DataSyncError[]
+
+  @@index([leagueId, startedAt])
+}
+
+model DataSyncError {
+  id         String       @id @default(cuid())
+  dataSyncId String
+  severity   SyncSeverity @default(ERROR)
+  entity     String
+  entityRef  String?
+  message    String
+  payload    Json?
+  resolvedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  sync DataSync @relation(fields: [dataSyncId], references: [id], onDelete: Cascade)
+
+  @@index([dataSyncId])
+}

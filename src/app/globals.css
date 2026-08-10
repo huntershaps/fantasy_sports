@@ -1,26 +1,279 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===========================================================================
+   Design tokens
+   Dark is the primary theme — the sports-media aesthetic lives there. Light is
+   a fully supported alternate, tuned warm so it reads like newsprint/scrapbook
+   rather than a washed-out inversion of the dark theme.
+   =========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces, dark theme (default) */
+  --c-bg: #07080b;
+  --c-bg-subtle: #0b0d12;
+  --c-surface: #11141b;
+  --c-surface-2: #171b24;
+  --c-surface-3: #1f2430;
+  --c-line: #242a36;
+  --c-line-strong: #333a48;
+
+  /* Text */
+  --c-text: #f3f5f9;
+  --c-text-muted: #9aa3b2;
+  --c-text-subtle: #6a7383;
+  --c-text-inverse: #07080b;
+
+  /* Brand / semantic accents */
+  --c-gold: #f5c518;
+  --c-gold-deep: #b8890a;
+  --c-field: #17c26d;
+  --c-ember: #f4523b;
+  --c-ice: #4d9cff;
+  --c-violet: #9061f9;
+
+  /* Tinted washes for card glows and badge fills */
+  --c-gold-wash: rgb(245 197 24 / 0.12);
+  --c-field-wash: rgb(23 194 109 / 0.12);
+  --c-ember-wash: rgb(244 82 59 / 0.12);
+  --c-ice-wash: rgb(77 156 255 / 0.12);
+  --c-violet-wash: rgb(144 97 249 / 0.12);
+
+  /* Elevation. Dark UIs need light-leak rims, not just drop shadows. */
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset,
+    0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-raised: 0 1px 0 0 rgb(255 255 255 / 0.06) inset,
+    0 4px 8px rgb(0 0 0 / 0.35), 0 24px 48px -20px rgb(0 0 0 / 0.7);
+  --shadow-pop: 0 1px 0 0 rgb(255 255 255 / 0.08) inset,
+    0 8px 16px rgb(0 0 0 / 0.4), 0 40px 80px -24px rgb(0 0 0 / 0.8);
+
+  /* Per-league accent. Overridden inline on league routes. */
+  --c-accent: var(--c-gold);
+  --c-accent-2: #0b7a75;
+
+  --radius-card: 0.875rem;
+  --radius-panel: 1.25rem;
+}
+
+.light {
+  --c-bg: #f7f6f3;
+  --c-bg-subtle: #f1efea;
+  --c-surface: #ffffff;
+  --c-surface-2: #faf9f6;
+  --c-surface-3: #f1efea;
+  --c-line: #e2ded6;
+  --c-line-strong: #cdc7bb;
+
+  --c-text: #12141a;
+  --c-text-muted: #5a6070;
+  --c-text-subtle: #868d9c;
+  --c-text-inverse: #ffffff;
+
+  --c-gold: #b8890a;
+  --c-gold-deep: #8a660a;
+  --c-field: #0e9c56;
+  --c-ember: #d13a24;
+  --c-ice: #2b6fd6;
+  --c-violet: #6f42d9;
+
+  --c-gold-wash: rgb(184 137 10 / 0.1);
+  --c-field-wash: rgb(14 156 86 / 0.1);
+  --c-ember-wash: rgb(209 58 36 / 0.1);
+  --c-ice-wash: rgb(43 111 214 / 0.1);
+  --c-violet-wash: rgb(111 66 217 / 0.1);
+
+  --shadow-card: 0 1px 2px rgb(18 20 26 / 0.06),
+    0 8px 20px -14px rgb(18 20 26 / 0.25);
+  --shadow-raised: 0 2px 6px rgb(18 20 26 / 0.08),
+    0 20px 40px -20px rgb(18 20 26 / 0.3);
+  --shadow-pop: 0 8px 16px rgb(18 20 26 / 0.1),
+    0 40px 72px -28px rgb(18 20 26 / 0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--c-bg);
+  --color-bg-subtle: var(--c-bg-subtle);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+
+  --color-ink: var(--c-text);
+  --color-muted: var(--c-text-muted);
+  --color-subtle: var(--c-text-subtle);
+  --color-inverse: var(--c-text-inverse);
+
+  --color-gold: var(--c-gold);
+  --color-gold-deep: var(--c-gold-deep);
+  --color-field: var(--c-field);
+  --color-ember: var(--c-ember);
+  --color-ice: var(--c-ice);
+  --color-violet: var(--c-violet);
+  --color-accent: var(--c-accent);
+  --color-accent-2: var(--c-accent-2);
+
+  --color-gold-wash: var(--c-gold-wash);
+  --color-field-wash: var(--c-field-wash);
+  --color-ember-wash: var(--c-ember-wash);
+  --color-ice-wash: var(--c-ice-wash);
+  --color-violet-wash: var(--c-violet-wash);
+
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-card: var(--radius-card);
+  --radius-panel: var(--radius-panel);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-pop: var(--shadow-pop);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===========================================================================
+   Base
+   =========================================================================== */
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+
+  /* Scores and records must never shift width as they tick. */
+  .tabular,
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--c-gold);
+    color: var(--c-text-inverse);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--c-gold);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--c-line-strong);
+    border-radius: 999px;
+    border: 3px solid var(--c-bg);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===========================================================================
+   Utilities
+   =========================================================================== */
+
+@utility stat-figure {
+  font-family: var(--font-display), sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+/* Small all-caps label used above stat blocks and section headers. */
+@utility eyebrow {
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+/* Hairline field-yard-line texture for hero sections. Deliberately faint —
+   the data is the subject, not the football graphics. */
+@utility field-lines {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 63px,
+    rgb(255 255 255 / 0.035) 63px,
+    rgb(255 255 255 / 0.035) 64px
+  );
+}
+
+@utility noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+
+/* Horizontal card rails on mobile — snap without a visible scrollbar. */
+@utility rail {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+@utility rail-item {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
