@@ -1,0 +1,218 @@
+import type { AwardScope, AwardTier } from "@/generated/prisma/enums";
+
+export type AwardBlueprint = {
+  key: string;
+  name: string;
+  icon: string;
+  description: string;
+  tier: AwardTier;
+  scope: AwardScope;
+  accentColor: string;
+  grantsCertificate?: boolean;
+  certificateTemplate?: string;
+};
+
+/** Built-in award catalog. The engine emits awards by key, so adding a new
+ *  built-in here plus a rule in the engine is all it takes. Super Admins can
+ *  add league-scoped custom definitions on top of these. */
+export const AWARD_CATALOG: AwardBlueprint[] = [
+  {
+    key: "league_champion",
+    name: "League Champion",
+    icon: "🏆",
+    description: "Won the championship game and the right to never shut up about it.",
+    tier: "LEGENDARY",
+    scope: "SEASON",
+    accentColor: "#F5C518",
+    grantsCertificate: true,
+    certificateTemplate: "champion",
+  },
+  {
+    key: "runner_up",
+    name: "Runner-Up",
+    icon: "🥈",
+    description: "Made it to the final and lost the only game that mattered.",
+    tier: "SILVER",
+    scope: "SEASON",
+    accentColor: "#9AA3B2",
+    grantsCertificate: true,
+    certificateTemplate: "classic",
+  },
+  {
+    key: "third_place",
+    name: "Third Place",
+    icon: "🥉",
+    description: "Won the game nobody wanted to play.",
+    tier: "BRONZE",
+    scope: "SEASON",
+    accentColor: "#B87333",
+  },
+  {
+    key: "points_champion",
+    name: "Points Champion",
+    icon: "📊",
+    description: "Scored more points than anyone else across the regular season.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#4D9CFF",
+    grantsCertificate: true,
+    certificateTemplate: "classic",
+  },
+  {
+    key: "highest_scoring_week",
+    name: "Highest Scoring Week",
+    icon: "🔥",
+    description: "Put up the single biggest score of the season.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#F4523B",
+  },
+  {
+    key: "lowest_scoring_week",
+    name: "Lowest Scoring Week",
+    icon: "💀",
+    description: "Produced the least fantasy football anyone has ever seen.",
+    tier: "SHAME",
+    scope: "SEASON",
+    accentColor: "#6A7383",
+  },
+  {
+    key: "biggest_blowout",
+    name: "Biggest Blowout",
+    icon: "⚡",
+    description: "Won by a margin that should have been called off at halftime.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#F5C518",
+  },
+  {
+    key: "closest_game",
+    name: "Closest Game",
+    icon: "😱",
+    description: "Survived the narrowest margin of the season.",
+    tier: "FUN",
+    scope: "SEASON",
+    accentColor: "#9061F9",
+  },
+  {
+    key: "most_wins",
+    name: "Most Wins",
+    icon: "👑",
+    description: "Finished the regular season with the best record.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#F5C518",
+  },
+  {
+    key: "best_win_streak",
+    name: "Best Winning Streak",
+    icon: "📈",
+    description: "Ran off the longest winning streak of the season.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#17C26D",
+  },
+  {
+    key: "worst_loss_streak",
+    name: "Worst Losing Streak",
+    icon: "📉",
+    description: "Lost, and then kept losing, for longer than anyone else.",
+    tier: "SHAME",
+    scope: "SEASON",
+    accentColor: "#F4523B",
+  },
+  {
+    key: "best_trade",
+    name: "Best Trade",
+    icon: "💰",
+    description: "Made the trade the rest of the league is still complaining about.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#17C26D",
+  },
+  {
+    key: "worst_trade",
+    name: "Worst Trade",
+    icon: "🤡",
+    description: "Made the trade that will be brought up at every future draft.",
+    tier: "SHAME",
+    scope: "SEASON",
+    accentColor: "#F4523B",
+  },
+  {
+    key: "best_waiver",
+    name: "Best Waiver Pickup",
+    icon: "🧠",
+    description: "Pulled a season-changing player off the wire.",
+    tier: "GOLD",
+    scope: "SEASON",
+    accentColor: "#4D9CFF",
+  },
+  {
+    key: "worst_waiver",
+    name: "Worst Waiver Pickup",
+    icon: "🚨",
+    description: "Spent real money on a player who did nothing.",
+    tier: "SHAME",
+    scope: "SEASON",
+    accentColor: "#6A7383",
+  },
+  {
+    key: "season_mvp",
+    name: "Most Valuable Player",
+    icon: "🦸",
+    description: "The player who carried a roster all season long.",
+    tier: "LEGENDARY",
+    scope: "SEASON",
+    accentColor: "#9061F9",
+  },
+  {
+    key: "biggest_upset",
+    name: "Biggest Upset",
+    icon: "💣",
+    description: "Beat a team that had no business losing that game.",
+    tier: "FUN",
+    scope: "SEASON",
+    accentColor: "#F5C518",
+  },
+  {
+    key: "perfect_lineup",
+    name: "Perfect Lineup",
+    icon: "🎯",
+    description: "Started the optimal roster. No points left on the bench.",
+    tier: "LEGENDARY",
+    scope: "WEEK",
+    accentColor: "#17C26D",
+  },
+  {
+    key: "bench_disaster",
+    name: "Bench Disaster",
+    icon: "🪑",
+    description: "Left more points on the bench than the final margin of defeat.",
+    tier: "SHAME",
+    scope: "WEEK",
+    accentColor: "#F4523B",
+  },
+  {
+    key: "greatest_season",
+    name: "Greatest Season",
+    icon: "🐐",
+    description: "The best single season in the history of this league.",
+    tier: "LEGENDARY",
+    scope: "ALL_TIME",
+    accentColor: "#F5C518",
+    grantsCertificate: true,
+    certificateTemplate: "champion",
+  },
+  {
+    key: "worst_season",
+    name: "Worst Season",
+    icon: "🗑",
+    description: "The worst single season in the history of this league.",
+    tier: "SHAME",
+    scope: "ALL_TIME",
+    accentColor: "#6A7383",
+  },
+];
+
+export const AWARD_BY_KEY = new Map(AWARD_CATALOG.map((a) => [a.key, a]));
