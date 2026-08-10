@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Museum of Fantasy Sports
 
-## Getting Started
+A league history and awards platform for fantasy football. Every championship,
+every blowout, every trade nobody has forgiven — kept permanently and served
+back on the anniversary of the day it happened.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The frontend never talks to ESPN or Yahoo. Data flows one way:
+
+```
+External platform → FantasyProvider → normalization → database
+                  → historical event engine → records / awards / memories
+                  → personalized UI
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Two invariants shape the schema:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **History is append-safe.** Mutable rows carry `source` and `lockedFields`,
+   and every provider-sourced row has a natural key, so re-importing a season
+   updates in place instead of destroying manual corrections.
+2. **A person is not their team.** `User → TeamMembership → FantasyTeam →
+   Franchise` keeps a manager's identity separate from whatever they named the
+   team that year, which is what makes career history traversable.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Memories store `template` + `data` plus a `MemorySubject` join rather than
+finished prose, so one row renders as "You beat Noah" or "Noah beat you"
+depending on who is reading it.
 
-## Learn More
+Records keep their full lineage via `previousRecordId`, so the app can say a
+mark stood for three years before it fell.
 
-To learn more about Next.js, take a look at the following resources:
+## Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Next.js 16 · React 19 · TypeScript · Tailwind v4 · Prisma 7 · PostgreSQL ·
+Auth.js v5 · Motion · Recharts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Local setup
 
-## Deploy on Vercel
+Requires Node 22+, pnpm, and PostgreSQL 17 on `localhost:5432`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm install
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Copy the environment template and generate secrets:
+
+```bash
+cp .env.example .env && node scripts/gen-secrets.mjs
+```
+
+Create the database and apply migrations:
+
+```bash
+createdb -U postgres fantasy_sports && pnpm db:migrate
+```
+
+Seed development data and run the event engine over it:
+
+```bash
+pnpm db:seed
+```
+
+Start the dev server:
+
+```bash
+pnpm dev
+```
+
+Sign in with `hunter@sflinsider.com` / `museum2026!`.
+
+> **The seeded leagues are fictional.** They exist so the UI can be built and
+> tested against realistic shapes. They are dev-database only, never committed,
+> and get wiped when real league data is imported.
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Dev server |
+| `pnpm build` | Production build |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm db:migrate` | Apply Prisma migrations |
+| `pnpm db:seed` | Reset and regenerate development data |
+| `pnpm db:studio` | Prisma Studio |
+| `node scripts/smoke.mjs` | Sign in and request every route, reporting non-200s |
+
+`smoke.mjs` needs a running dev server. It exists because manual spot-checks
+missed 500s on three pages that it caught immediately.
+
+## Connecting real leagues
+
+Not wired up yet. When it is:
+
+- **ESPN** — public leagues need only the league id. Private leagues and prior
+  seasons also need the `SWID` and `espn_s2` cookies from a signed-in browser
+  session.
+- **Yahoo** — requires an app registered at developer.yahoo.com and a one-time
+  OAuth2 authorization, even for public leagues.
+
+Credentials are stored encrypted with `CREDENTIAL_ENCRYPTION_KEY` and never
+sent to the browser.
+
+## Not yet built
+
+- ESPN and Yahoo provider implementations and the sync pipeline
+- Mail transport for password reset (tokens work; delivery does not)
+- Admin create/edit forms for leagues, seasons, and manual awards
