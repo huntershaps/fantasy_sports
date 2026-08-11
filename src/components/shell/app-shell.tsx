@@ -11,7 +11,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const leagues: SidebarLeague[] = await getSidebarLeagues(actor, viewer.id);
 
   return (
-    <div className="min-h-dvh lg:pl-56">
+    // Must match the sidebar's w-60, or content slides under it.
+    <div className="min-h-dvh lg:pl-60">
       <Sidebar user={actor} leagues={leagues} />
 
       <div className="flex min-h-dvh flex-col">
