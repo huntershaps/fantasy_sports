@@ -325,7 +325,55 @@ export const espnProvider: FantasyProvider = {
           ];
         });
 
-    const transactions: NormalizedTransaction[] = (data.transactions ?? []).flatMap(
+    /**
+     * Transactions are not solved.
+     *
+     * ESPN will not return the branch from the combined league call, and every
+     * documented way of asking for it separately was rejected. Verified against
+     * a real league on both a completed and an active season: `mTransactions2`,
+     * `mRecentActivity` and `kona_league_communication` all answer **400** as
+     * soon as an `x-fantasy-filter` header is attached, and answer 200 with the
+     * branch absent when it is not. A 400 means the header is being parsed and
+     * refused, so the filter shape — or the reads host's tolerance of it — is
+     * wrong, not the credentials.
+     *
+     * The loop bails on the first failure rather than firing one doomed request
+     * per scoring period. Trades, waivers and drops therefore do not import yet.
+     */
+    const rawTransactions: NonNullable<EspnLeaguePayload["transactions"]> = [];
+    const lastPeriod = Math.max(
+      num(data.status?.finalScoringPeriod, 0),
+      regularSeasonWeeks + playoffWeeks,
+    );
+
+    for (let period = 1; period <= lastPeriod; period++) {
+      try {
+        const { data: periodData } = await fetchLeaguePayload<EspnLeaguePayload>(
+          ctx.providerLeagueId,
+          seasonYear,
+          ["mTransactions2"],
+          auth,
+          {
+            scoringPeriodId: period,
+            filter: {
+              transactions: {
+                filterType: { value: ["WAIVER", "TRADE", "FREEAGENT", "ROSTER"] },
+              },
+            },
+          },
+        );
+        if (periodData.transactions?.length) {
+          rawTransactions.push(...periodData.transactions);
+        }
+      } catch {
+        // Whatever rejects one period rejects them all, so stop rather than
+        // spending a request per week to collect the same failure.
+        break;
+      }
+    }
+
+    const seen = new Set<string>();
+    const transactions: NormalizedTransaction[] = rawTransactions.flatMap(
       (txn) => {
         if (txn.status && txn.status !== "EXECUTED") return [];
         const occurredOn = txn.proposedDate ? new Date(txn.proposedDate) : null;
@@ -341,9 +389,18 @@ export const espnProvider: FantasyProvider = {
             ? "DROP"
             : (TRANSACTION_TYPE_BY_ESPN[txn.type ?? ""] ?? "COMMISSIONER");
 
+          // The same transaction can appear under more than one scoring
+          // period, so dedupe on the natural key the database uses.
+          const providerTransactionId = String(
+            txn.id ?? `${txn.proposedDate}-${item.playerId}`,
+          );
+          const key = `${providerTransactionId}:${item.playerId}:${mapped}`;
+          if (seen.has(key)) return [];
+          seen.add(key);
+
           return [
             {
-              providerTransactionId: String(txn.id ?? `${txn.proposedDate}-${item.playerId}`),
+              providerTransactionId,
               providerTeamId: String(teamId),
               providerPlayerId: String(item.playerId),
               type: mapped as TransactionType,

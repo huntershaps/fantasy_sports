@@ -61,7 +61,16 @@ export function buildUrl(
 
 export type EspnFetchResult<T> = { data: T; usedHistorical: boolean };
 
-async function request<T>(url: string, auth: EspnAuth, signal?: AbortSignal): Promise<T> {
+/** ESPN gates some branches behind a filter header rather than a query param.
+ *  Without it `mTransactions2` returns 200 with the branch simply absent. */
+export type FantasyFilter = Record<string, unknown>;
+
+async function request<T>(
+  url: string,
+  auth: EspnAuth,
+  signal?: AbortSignal,
+  filter?: FantasyFilter,
+): Promise<T> {
   const cookie = cookieHeader(auth);
 
   let response: Response;
@@ -73,6 +82,7 @@ async function request<T>(url: string, auth: EspnAuth, signal?: AbortSignal): Pr
         "user-agent":
           "Mozilla/5.0 (compatible; MuseumOfFantasySports/1.0; +https://github.com/huntershaps/fantasy_sports)",
         ...(cookie ? { cookie } : {}),
+        ...(filter ? { "x-fantasy-filter": JSON.stringify(filter) } : {}),
       },
       signal,
       cache: "no-store",
@@ -129,7 +139,11 @@ export async function fetchLeaguePayload<T>(
   seasonYear: number,
   views: string[],
   auth: EspnAuth,
-  options: { scoringPeriodId?: number; signal?: AbortSignal } = {},
+  options: {
+    scoringPeriodId?: number;
+    signal?: AbortSignal;
+    filter?: FantasyFilter;
+  } = {},
 ): Promise<EspnFetchResult<T>> {
   const currentUrl = buildUrl(leagueId, seasonYear, {
     historical: false,
@@ -140,7 +154,7 @@ export async function fetchLeaguePayload<T>(
   let firstError: ProviderError | undefined;
   try {
     return {
-      data: await request<T>(currentUrl, auth, options.signal),
+      data: await request<T>(currentUrl, auth, options.signal, options.filter),
       usedHistorical: false,
     };
   } catch (error) {
@@ -157,7 +171,12 @@ export async function fetchLeaguePayload<T>(
   });
 
   try {
-    const payload = await request<T | T[]>(historyUrl, auth, options.signal);
+    const payload = await request<T | T[]>(
+      historyUrl,
+      auth,
+      options.signal,
+      options.filter,
+    );
     // The historical controller wraps its result in a single-element array.
     const unwrapped = (Array.isArray(payload) ? payload[0] : payload) as T | undefined;
     if (!unwrapped) {
