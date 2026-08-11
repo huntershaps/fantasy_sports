@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
-import { Avatar } from "@/components/ui/avatar";
+import { Crest } from "@/components/ui/crest";
 import { Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TrophyCase, type AwardCardData } from "@/components/cards/award-card";
@@ -21,12 +21,20 @@ export function ProfileView({
   teams,
   awards,
   isSelf,
+  settings,
 }: {
-  person: { id: string; name: string; image: string | null; bio: string | null };
+  person: {
+    id: string;
+    name: string;
+    displayName?: string | null;
+    image: string | null;
+    bio: string | null;
+  };
   career: CareerStats;
   teams: ManagerTeam[];
   awards: AwardCardData[];
   isSelf: boolean;
+  settings?: React.ReactNode;
 }) {
   const milestones = teams.filter((t) => t.isChampion || t.isRunnerUp);
 
@@ -44,7 +52,7 @@ export function ProfileView({
     <PageContainer width="wide" className="py-6">
       <header className="border-line mb-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-4 border-b pb-5">
         <div className="flex items-center gap-4">
-          <Avatar name={person.name} src={person.image} size="xl" rounded="full" />
+          <Crest name={person.name} src={person.image} size="2xl" shape="round" />
           <div className="min-w-0">
             <p className="label mb-1">{isSelf ? "Your profile" : "Manager"}</p>
             <h1 className="text-2xl leading-none font-semibold">{person.name}</h1>
@@ -133,6 +141,13 @@ export function ProfileView({
         </div>
 
         <aside className="lg:col-span-4">
+          {settings ? (
+            <Section className="mb-8">
+              <SectionHeader label="Your profile" rule={false} />
+              {settings}
+            </Section>
+          ) : null}
+
           {milestones.length > 0 ? (
             <Section>
               <SectionHeader label="Career timeline" rule={false} />

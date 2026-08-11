@@ -68,6 +68,8 @@ const ROUTES = [
   "/league/the-founders-league/standings?season=2024",
   "/league/sunday-scaries",
   "/teams",
+  "/schedule",
+  "/standings",
   "/memories",
   "/memories?filter=mine",
   "/memories?filter=TRADE",

@@ -16,29 +16,29 @@
 
 :root {
   /* Surfaces — dark is the primary theme */
-  --c-base: #0a0b0d;
-  --c-surface: #101215;
-  --c-surface-2: #16181c;
-  --c-surface-3: #1c1f24;
-  --c-line: #1e2126;
-  --c-line-strong: #2b2f36;
+  --c-base: #0b0f14;
+  --c-surface: #11161d;
+  --c-surface-2: #1a212a;
+  --c-surface-3: #222b36;
+  --c-line: #1e2630;
+  --c-line-strong: #2c3542;
 
   /* Text */
-  --c-text: #e9ebee;
-  --c-text-2: #969ba4;
-  --c-text-3: #676c75;
-  --c-text-inverse: #0a0b0d;
+  --c-text: #e4e7eb;
+  --c-text-2: #98a2b3;
+  --c-text-3: #6b7686;
+  --c-text-inverse: #0b0f14;
 
-  /* Brand: aged brass. Museum plaque, not highlighter. */
-  --c-brand: #c9a227;
-  --c-brand-hi: #e0b933;
-  --c-brand-dim: #6b5615;
+  /* Brand: the gold of the crest. */
+  --c-brand: #f59e0b;
+  --c-brand-hi: #fbbf24;
+  --c-brand-dim: #7c4d05;
 
-  /* Semantic — deliberately desaturated so they read as data, not decoration */
-  --c-win: #4f9d63;
-  --c-loss: #c2554d;
-  --c-info: #5183c4;
-  --c-accent-2: #8a6db1;
+  /* Semantic */
+  --c-win: #22c55e;
+  --c-loss: #ef4444;
+  --c-info: #2d8cff;
+  --c-accent-2: #a78bfa;
 
   /* Per-league identity, overridden inline on league routes */
   --c-league: var(--c-brand);
@@ -96,7 +96,8 @@
   --color-accent-2: var(--c-accent-2);
   --color-league: var(--c-league);
 
-  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-archivo), ui-sans-serif, system-ui,
+    sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 

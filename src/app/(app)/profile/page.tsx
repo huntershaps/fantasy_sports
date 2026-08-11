@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProfileView } from "@/components/profile/profile-view";
+import { ProfileSettings } from "@/components/profile/profile-settings";
 import { requireViewContext } from "@/lib/session";
 import { getCareerStats, getManagerTeams } from "@/lib/queries/career";
 import { listAwards } from "@/lib/queries/awards";
@@ -13,7 +14,13 @@ export default async function ProfilePage() {
   const [person, career, teams, awards] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: viewer.id },
-      select: { id: true, name: true, image: true, bio: true },
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        image: true,
+        bio: true,
+      },
     }),
     getCareerStats(viewer.id),
     getManagerTeams(viewer.id),
@@ -27,6 +34,7 @@ export default async function ProfilePage() {
       teams={teams}
       awards={awards}
       isSelf
+      settings={<ProfileSettings person={person} />}
     />
   );
 }

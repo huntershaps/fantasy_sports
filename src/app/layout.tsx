@@ -1,10 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Inter, JetBrains_Mono } from "next/font/google";
+import { Archivo, Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import { themeScript } from "@/components/theme-toggle";
 import "./globals.css";
 
 const archivo = Archivo({
   variable: "--font-archivo",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// Headlines and figures. Its tabular lining numerals are why scores line up.
+const grotesk = Space_Grotesk({
+  variable: "--font-grotesk",
   subsets: ["latin"],
   display: "swap",
 });
@@ -45,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${archivo.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${archivo.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

@@ -1,17 +1,7 @@
-import Image from "next/image";
-import { cn, initials } from "@/lib/utils";
+import { Crest, type CrestSize } from "@/components/ui/crest";
 
-const sizes = {
-  xs: "size-5 text-[9px]",
-  sm: "size-6 text-[10px]",
-  md: "size-8 text-2xs",
-  lg: "size-10 text-xs",
-  xl: "size-14 text-base",
-  "2xl": "size-20 text-xl",
-} as const;
-
-/** Monogram crests rather than coloured circles. A team identity should look
- *  like a badge on a jersey, not a chat avatar. */
+/** Kept as a thin alias so every existing call site renders the crest system.
+ *  New code should import Crest directly. */
 export function Avatar({
   name,
   src,
@@ -21,35 +11,17 @@ export function Avatar({
 }: {
   name: string;
   src?: string | null;
-  size?: keyof typeof sizes;
+  size?: CrestSize;
   className?: string;
-  rounded?: "full" | "md";
+  rounded?: "full" | "md" | "card";
 }) {
-  const shape = rounded === "full" ? "rounded-full" : "rounded-md";
-
-  if (src) {
-    return (
-      <Image
-        src={src}
-        alt=""
-        width={80}
-        height={80}
-        className={cn("border-line shrink-0 border object-cover", shape, sizes[size], className)}
-      />
-    );
-  }
-
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "bg-surface-3 text-muted border-line grid shrink-0 place-items-center border font-semibold tracking-wide",
-        shape,
-        sizes[size],
-        className,
-      )}
-    >
-      {initials(name)}
-    </span>
+    <Crest
+      name={name}
+      src={src}
+      size={size}
+      shape={rounded === "full" ? "round" : "square"}
+      className={className}
+    />
   );
 }

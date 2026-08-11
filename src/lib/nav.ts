@@ -39,6 +39,8 @@ const MAIN: NavSection = {
   items: [
     { label: "Home", href: "/home", icon: Home, primary: true, exact: true },
     { label: "Leagues", href: "/leagues", icon: Shield, primary: true },
+    { label: "Schedule", href: "/schedule", icon: CalendarDays },
+    { label: "Standings", href: "/standings", icon: BarChart3 },
     { label: "Memories", href: "/memories", icon: Sparkles, primary: true },
     { label: "Awards", href: "/awards", icon: Trophy, primary: true },
     { label: "Records", href: "/records", icon: Medal },
