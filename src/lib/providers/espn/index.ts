@@ -23,15 +23,26 @@ import {
 } from "./constants";
 import type {
   EspnLeaguePayload,
+  EspnMatchupSide,
   EspnRosterEntry,
   EspnTeam,
 } from "./schema";
 
+/**
+ * ESPN silently ignores view names it does not recognise — it returns 200 with
+ * the branch simply absent rather than erroring. `mSchedule` looks plausible
+ * and is widely repeated, but it is not a real v3 view; the matchup schedule
+ * comes from `mMatchup`. Verified against a real league: mSchedule yielded no
+ * `schedule` key at all, mMatchup yielded 81 entries.
+ */
 const CORE_VIEWS = [
   "mSettings",
   "mTeam",
   "mRoster",
-  "mSchedule",
+  "mMatchup",
+  // mMatchup alone returns the bracket structure with zeroed scores;
+  // mMatchupScore is what fills in totalPoints and the winner.
+  "mMatchupScore",
   "mDraftDetail",
   "mStatus",
 ];
@@ -46,6 +57,21 @@ function teamName(team: EspnTeam): string {
   // only have the former, so both have to be handled.
   const composed = [team.location, team.nickname].filter(Boolean).join(" ").trim();
   return team.name?.trim() || composed || `Team ${team.id ?? "?"}`;
+}
+
+/**
+ * Picks the fuller of ESPN's two roster branches.
+ *
+ * `rosterForMatchupPeriod` carries only the players who counted — nine slots in
+ * a standard lineup. `rosterForCurrentScoringPeriod` carries the whole roster
+ * including the bench, which is what makes "you left 40 points on the bench"
+ * possible. Prefer whichever has more entries, since which one is populated
+ * varies by season and by which views were requested.
+ */
+function lineupFor(side: EspnMatchupSide | undefined): NormalizedLineupSlot[] {
+  const full = side?.rosterForCurrentScoringPeriod?.entries ?? [];
+  const starters = side?.rosterForMatchupPeriod?.entries ?? [];
+  return lineupFrom(full.length >= starters.length ? full : starters);
 }
 
 function lineupFrom(entries: EspnRosterEntry[] | undefined): NormalizedLineupSlot[] {
@@ -234,14 +260,8 @@ export const espnProvider: FantasyProvider = {
           winner: decided ? (winner as "HOME" | "AWAY" | "TIE") : null,
           isComplete: decided,
           playedOn: null,
-          homeLineup: lineupFrom(
-            item.home?.rosterForMatchupPeriod?.entries ??
-              item.home?.rosterForCurrentScoringPeriod?.entries,
-          ),
-          awayLineup: lineupFrom(
-            item.away?.rosterForMatchupPeriod?.entries ??
-              item.away?.rosterForCurrentScoringPeriod?.entries,
-          ),
+          homeLineup: lineupFor(item.home),
+          awayLineup: lineupFor(item.away),
         },
       ];
     });
@@ -271,14 +291,8 @@ export const espnProvider: FantasyProvider = {
                 m.awayProviderTeamId === String(item.away?.teamId),
             );
             if (!target) continue;
-            target.homeLineup = lineupFrom(
-              item.home?.rosterForMatchupPeriod?.entries ??
-                item.home?.rosterForCurrentScoringPeriod?.entries,
-            );
-            target.awayLineup = lineupFrom(
-              item.away?.rosterForMatchupPeriod?.entries ??
-                item.away?.rosterForCurrentScoringPeriod?.entries,
-            );
+            target.homeLineup = lineupFor(item.home);
+            target.awayLineup = lineupFor(item.away);
           }
         } catch {
           // One unavailable week must not sink the whole import; the season
