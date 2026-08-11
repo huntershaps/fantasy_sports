@@ -115,10 +115,14 @@ async function request<T>(url: string, auth: EspnAuth, signal?: AbortSignal): Pr
 /**
  * Fetches a league payload, choosing the controller automatically.
  *
- * The current season is tried first; a 404 there means the season predates the
- * active one, so the historical controller is tried before giving up. That
- * ordering matters because ESPN answers 401 (not 404) for a private season
- * that does exist, and we want that error to surface rather than be masked.
+ * The current season is tried first. Both 404 (season predates the active one)
+ * and 401 fall through to the historical controller, because since 2025-08-01
+ * ESPN gates past seasons behind auth and the two controllers do not agree on
+ * which status they use for the same league — one can answer 401 where the
+ * other answers 404.
+ *
+ * If both fail, the 401 is preferred over the 404 when reporting, since
+ * "add your cookies" is actionable and "no such league" would be misleading.
  */
 export async function fetchLeaguePayload<T>(
   leagueId: string,
@@ -133,11 +137,17 @@ export async function fetchLeaguePayload<T>(
     scoringPeriodId: options.scoringPeriodId,
   });
 
+  let firstError: ProviderError | undefined;
   try {
-    return { data: await request<T>(currentUrl, auth, options.signal), usedHistorical: false };
+    return {
+      data: await request<T>(currentUrl, auth, options.signal),
+      usedHistorical: false,
+    };
   } catch (error) {
-    const notFound = error instanceof ProviderError && error.status === 404;
-    if (!notFound) throw error;
+    if (!(error instanceof ProviderError)) throw error;
+    // A rate limit or server fault says nothing about which controller to use.
+    if (error.status !== 404 && error.status !== 401) throw error;
+    firstError = error;
   }
 
   const historyUrl = buildUrl(leagueId, seasonYear, {
@@ -145,11 +155,19 @@ export async function fetchLeaguePayload<T>(
     views,
     scoringPeriodId: options.scoringPeriodId,
   });
-  const payload = await request<T | T[]>(historyUrl, auth, options.signal);
-  // The historical controller wraps its result in a single-element array.
-  const unwrapped = (Array.isArray(payload) ? payload[0] : payload) as T | undefined;
-  if (!unwrapped) {
-    throw new ProviderError("ESPN returned an empty historical payload.", 404);
+
+  try {
+    const payload = await request<T | T[]>(historyUrl, auth, options.signal);
+    // The historical controller wraps its result in a single-element array.
+    const unwrapped = (Array.isArray(payload) ? payload[0] : payload) as T | undefined;
+    if (!unwrapped) {
+      throw new ProviderError("ESPN returned an empty historical payload.", 404);
+    }
+    return { data: unwrapped, usedHistorical: true };
+  } catch (historyError) {
+    if (!(historyError instanceof ProviderError)) throw historyError;
+    const authProblem =
+      firstError?.status === 401 ? firstError : historyError.status === 401 ? historyError : null;
+    throw authProblem ?? historyError;
   }
-  return { data: unwrapped, usedHistorical: true };
 }
