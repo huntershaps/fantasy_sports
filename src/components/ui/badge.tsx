@@ -2,22 +2,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badge = cva(
-  "inline-flex items-center gap-1.5 rounded-full border font-semibold whitespace-nowrap [&_svg]:size-3",
+  "inline-flex items-center gap-1 rounded-sm font-medium whitespace-nowrap [&_svg]:size-3",
   {
     variants: {
       tone: {
-        neutral: "border-line bg-surface-2 text-muted",
-        gold: "border-gold/30 bg-gold-wash text-gold",
-        field: "border-field/30 bg-field-wash text-field",
-        ember: "border-ember/30 bg-ember-wash text-ember",
-        ice: "border-ice/30 bg-ice-wash text-ice",
-        violet: "border-violet/30 bg-violet-wash text-violet",
-        solid: "border-transparent bg-ink text-inverse",
+        neutral: "bg-surface-3 text-muted",
+        brand: "bg-brand-dim/30 text-brand",
+        win: "text-win",
+        loss: "text-loss",
+        info: "text-info",
+        outline: "border border-line-strong text-muted",
       },
       size: {
-        xs: "h-5 px-2 text-[10px] tracking-wide uppercase",
-        sm: "h-6 px-2.5 text-[11px]",
-        md: "h-7 px-3 text-xs",
+        xs: "h-4 px-1.5 text-2xs",
+        sm: "h-5 px-1.5 text-xs",
       },
     },
     defaultVariants: { tone: "neutral", size: "sm" },
@@ -33,23 +31,65 @@ export function Badge({
   return <span className={cn(badge({ tone, size }), className)} {...props} />;
 }
 
-/** Win/Loss/Tie pill used on matchup cards and schedules. */
-export function ResultBadge({
-  result,
+/** Compact form indicator. Letters rather than filled circles — a run of
+ *  results should read as a sequence, not a row of traffic lights. */
+export function FormStrip({
+  results,
   className,
 }: {
-  result: "W" | "L" | "T";
+  results: ("W" | "L" | "T")[];
   className?: string;
 }) {
-  const tone = result === "W" ? "field" : result === "L" ? "ember" : "neutral";
+  if (results.length === 0) {
+    return <span className="text-faint text-xs">No games</span>;
+  }
   return (
-    <Badge
-      tone={tone}
-      size="xs"
-      className={cn("size-5 justify-center px-0 font-bold", className)}
-      aria-label={result === "W" ? "Win" : result === "L" ? "Loss" : "Tie"}
+    <span
+      className={cn("inline-flex items-center gap-0.5", className)}
+      aria-label={`Recent form: ${results.join(", ")}`}
     >
-      {result}
-    </Badge>
+      {results.map((result, i) => (
+        <span
+          key={i}
+          aria-hidden
+          className={cn(
+            "grid size-4 place-items-center rounded-[3px] text-2xs font-semibold",
+            result === "W"
+              ? "bg-win/15 text-win"
+              : result === "L"
+                ? "bg-loss/15 text-loss"
+                : "bg-surface-3 text-faint",
+          )}
+        >
+          {result}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Streak reads as data, so it stays in the text colour unless it is notable. */
+export function Streak({
+  type,
+  length,
+  className,
+}: {
+  type: "W" | "L" | "T" | null;
+  length: number;
+  className?: string;
+}) {
+  if (!type || length === 0) return <span className="text-faint">—</span>;
+  return (
+    <span
+      className={cn(
+        "tnum font-medium",
+        length >= 3 && type === "W" && "text-win",
+        length >= 3 && type === "L" && "text-loss",
+        className,
+      )}
+    >
+      {type}
+      {length}
+    </span>
   );
 }

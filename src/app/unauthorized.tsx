@@ -6,11 +6,11 @@ export default function Unauthorized() {
   return (
     <div className="grid min-h-dvh place-items-center px-6">
       <div className="max-w-md text-center">
-        <div className="bg-gold-wash text-gold mx-auto mb-6 grid size-14 place-items-center rounded-2xl">
+        <div className="bg-brand-dim/25 text-brand mx-auto mb-6 grid size-14 place-items-center rounded-2xl">
           <LockKeyhole className="size-6" />
         </div>
-        <p className="eyebrow mb-2">401 — Sign in required</p>
-        <h1 className="text-3xl font-extrabold">Your history is behind the door</h1>
+        <p className="label mb-2">401 — Sign in required</p>
+        <h1 className="text-xl font-semibold">Your history is behind the door</h1>
         <p className="text-muted mt-3 leading-relaxed">
           Sign in to see your teams, awards, and everything your league would
           rather forget.

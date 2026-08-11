@@ -4,92 +4,158 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Wordmark } from "@/components/brand";
-import { Avatar } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { isActivePath, navigationFor } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import type { SessionUser } from "@/lib/session";
 
-export function Sidebar({ user }: { user: SessionUser }) {
+export type SidebarLeague = {
+  slug: string;
+  name: string;
+  accentColor: string;
+  teamName: string | null;
+  record: string | null;
+};
+
+export function Sidebar({
+  user,
+  leagues,
+}: {
+  user: SessionUser;
+  leagues: SidebarLeague[];
+}) {
   const pathname = usePathname();
   const sections = navigationFor(user.role);
+  const [main, ...rest] = sections;
 
   return (
-    <aside className="border-line bg-bg-subtle fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r lg:flex">
-      <div className="border-line flex h-16 shrink-0 items-center border-b px-5">
-        <Link href="/home" className="rounded-lg">
+    <aside className="border-line bg-surface fixed inset-y-0 left-0 z-30 hidden w-56 flex-col border-r lg:flex">
+      <div className="border-line flex h-12 shrink-0 items-center border-b px-4">
+        <Link href="/home" className="rounded-sm">
           <Wordmark />
         </Link>
       </div>
 
-      <nav
-        aria-label="Main"
-        className="no-scrollbar flex-1 space-y-6 overflow-y-auto px-3 py-5"
-      >
-        {sections.map((section, i) => (
-          <div key={section.label ?? i}>
-            {section.label ? (
-              <p className="eyebrow px-3 pb-2">{section.label}</p>
-            ) : null}
-            <ul className="space-y-0.5">
-              {section.items.map((item) => {
-                const active = isActivePath(pathname, item);
+      <nav aria-label="Main" className="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
+        <ul className="space-y-px">
+          {main.items.map((item) => (
+            <li key={item.href}>
+              <NavLink item={item} active={isActivePath(pathname, item)} />
+            </li>
+          ))}
+        </ul>
+
+        {/* Leagues live in the sidebar so a league is always one hop away. */}
+        {leagues.length > 0 ? (
+          <div className="mt-5">
+            <p className="label px-2.5 pb-1.5">Leagues</p>
+            <ul className="space-y-px">
+              {leagues.map((league) => {
+                const href = `/league/${league.slug}`;
+                const active = pathname.startsWith(href);
                 return (
-                  <li key={item.href}>
+                  <li key={league.slug}>
                     <Link
-                      href={item.href}
+                      href={href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-surface-2 text-ink"
-                          : "text-muted hover:bg-surface-2/60 hover:text-ink",
+                        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-colors",
+                        active ? "bg-surface-2 text-ink" : "text-muted hover:bg-surface-2/60 hover:text-ink",
                       )}
                     >
-                      {active ? (
-                        <span className="bg-gold absolute top-1/2 -left-3 h-5 w-1 -translate-y-1/2 rounded-r-full" />
-                      ) : null}
-                      <item.icon
-                        className={cn(
-                          "size-[18px] shrink-0 transition-colors",
-                          active ? "text-gold" : "text-subtle group-hover:text-muted",
-                        )}
+                      <span
+                        aria-hidden
+                        className="h-4 w-0.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: league.accentColor }}
                       />
-                      {item.label}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
+                          {league.name}
+                        </span>
+                        {league.teamName ? (
+                          <span className="text-faint block truncate text-xs">
+                            {league.teamName}
+                          </span>
+                        ) : null}
+                      </span>
+                      {league.record ? (
+                        <span className="tnum text-faint shrink-0 text-xs">
+                          {league.record}
+                        </span>
+                      ) : null}
                     </Link>
                   </li>
                 );
               })}
             </ul>
           </div>
+        ) : null}
+
+        {rest.map((section, i) => (
+          <div key={section.label ?? i} className="mt-5">
+            {section.label ? <p className="label px-2.5 pb-1.5">{section.label}</p> : null}
+            <ul className="space-y-px">
+              {section.items.map((item) => (
+                <li key={item.href}>
+                  <NavLink item={item} active={isActivePath(pathname, item)} />
+                </li>
+              ))}
+            </ul>
+          </div>
         ))}
       </nav>
 
-      <div className="border-line border-t p-3">
-        <div className="hover:bg-surface-2 flex items-center gap-3 rounded-lg p-2 transition-colors">
-          <Link href="/profile" className="flex min-w-0 flex-1 items-center gap-3">
-            <Avatar name={user.name} src={user.image} size="sm" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">
-                {user.name}
-              </span>
-              <span className="text-subtle block truncate text-xs">
-                {user.role === "SUPER_ADMIN"
-                  ? "Super Admin"
-                  : user.role === "ADMIN"
-                    ? "Admin"
-                    : "Manager"}
-              </span>
+      <div className="border-line flex items-center gap-2 border-t px-2 py-2">
+        <Link
+          href="/profile"
+          className="hover:bg-surface-2 flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors"
+        >
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-medium">{user.name}</span>
+            <span className="text-faint block truncate text-xs">
+              {user.role === "SUPER_ADMIN"
+                ? "Super Admin"
+                : user.role === "ADMIN"
+                  ? "Admin"
+                  : "Manager"}
             </span>
-          </Link>
-          <Link
-            href="/signout"
-            aria-label="Sign out"
-            className="text-subtle hover:text-ink grid size-8 shrink-0 place-items-center rounded-lg transition-colors"
-          >
-            <LogOut className="size-4" />
-          </Link>
-        </div>
+          </span>
+        </Link>
+        <ThemeToggle />
+        <Link
+          href="/signout"
+          aria-label="Sign out"
+          className="text-faint hover:text-ink grid size-7 shrink-0 place-items-center rounded-md transition-colors"
+        >
+          <LogOut className="size-3.5" />
+        </Link>
       </div>
     </aside>
+  );
+}
+
+function NavLink({
+  item,
+  active,
+}: {
+  item: { label: string; href: string; icon: React.ComponentType<{ className?: string }> };
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
+        active
+          ? "bg-surface-2 text-ink font-medium"
+          : "text-muted hover:bg-surface-2/60 hover:text-ink",
+      )}
+    >
+      <item.icon
+        className={cn("size-4 shrink-0", active ? "text-brand" : "text-faint")}
+      />
+      {item.label}
+    </Link>
   );
 }

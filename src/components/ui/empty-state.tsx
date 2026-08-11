@@ -6,32 +6,33 @@ export function EmptyState({
   description,
   action,
   className,
+  compact,
 }: {
   icon?: React.ComponentType<{ className?: string }>;
   title: string;
   description?: string;
   action?: React.ReactNode;
   className?: string;
+  compact?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "border-line rounded-card flex flex-col items-center justify-center border border-dashed px-6 py-14 text-center",
+        "border-line flex flex-col items-start border-t",
+        compact ? "py-6" : "py-10",
         className,
       )}
     >
-      {Icon ? (
-        <div className="bg-surface-2 text-subtle mb-4 grid size-12 place-items-center rounded-2xl">
-          <Icon className="size-5" />
-        </div>
-      ) : null}
-      <p className="text-base font-semibold">{title}</p>
+      <div className="flex items-center gap-2.5">
+        {Icon ? <Icon className="text-faint size-4" /> : null}
+        <p className="text-ink text-base font-medium">{title}</p>
+      </div>
       {description ? (
-        <p className="text-muted mt-1.5 max-w-sm text-sm leading-relaxed">
+        <p className="text-muted mt-1.5 max-w-md text-sm leading-relaxed">
           {description}
         </p>
       ) : null}
-      {action ? <div className="mt-5">{action}</div> : null}
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { accessibleLeagueIds, type SessionUser } from "@/lib/session";
+import { formatRecord } from "@/lib/utils";
 
 /** Every league query funnels through this so a member can never read a league
  *  they do not belong to, regardless of what the URL says. */
@@ -70,6 +71,44 @@ export const listLeagues = cache(async (user: SessionUser) => {
 
   return withChampions;
 });
+
+/** Compact league list for the sidebar, including the viewer's current team so
+ *  navigation carries a little standings context. */
+export const getSidebarLeagues = cache(
+  async (user: SessionUser, viewerId: string) => {
+    const leagues = await db.league.findMany({
+      where: { ...(await leagueScope(user)), isArchived: false },
+      orderBy: { foundedYear: "asc" },
+      select: {
+        slug: true,
+        name: true,
+        accentColor: true,
+        seasons: {
+          orderBy: { year: "desc" },
+          take: 1,
+          select: {
+            teams: {
+              where: { memberships: { some: { userId: viewerId } } },
+              take: 1,
+              select: { name: true, wins: true, losses: true, ties: true },
+            },
+          },
+        },
+      },
+    });
+
+    return leagues.map((league) => {
+      const team = league.seasons[0]?.teams[0];
+      return {
+        slug: league.slug,
+        name: league.name,
+        accentColor: league.accentColor,
+        teamName: team?.name ?? null,
+        record: team ? formatRecord(team.wins, team.losses, team.ties) : null,
+      };
+    });
+  },
+);
 
 export const getLeagueBySlug = cache(async (user: SessionUser, slug: string) => {
   const league = await db.league.findFirst({
@@ -164,6 +203,76 @@ export const getSeasonMatchups = cache(async (seasonId: string, week?: number) =
 });
 
 export type MatchupSummary = Awaited<ReturnType<typeof getSeasonMatchups>>[number];
+
+/** The viewer's next unplayed games across every league they belong to. */
+export const getUpcomingForUser = cache(
+  async (user: SessionUser, viewerId: string, take = 4) => {
+    const ids = await accessibleLeagueIds(user);
+    if (ids !== "ALL" && ids.length === 0) return [];
+
+    const matchups = await db.matchup.findMany({
+      where: {
+        isComplete: false,
+        season: {
+          status: "IN_PROGRESS",
+          ...(ids === "ALL" ? {} : { leagueId: { in: ids } }),
+        },
+        OR: [
+          { homeTeam: { memberships: { some: { userId: viewerId } } } },
+          { awayTeam: { memberships: { some: { userId: viewerId } } } },
+        ],
+      },
+      orderBy: [{ week: "asc" }],
+      take,
+      include: {
+        homeTeam: {
+          select: {
+            id: true,
+            name: true,
+            logoUrl: true,
+            wins: true,
+            losses: true,
+            memberships: { include: { user: { select: { id: true, name: true } } } },
+          },
+        },
+        awayTeam: {
+          select: {
+            id: true,
+            name: true,
+            logoUrl: true,
+            wins: true,
+            losses: true,
+            memberships: { include: { user: { select: { id: true, name: true } } } },
+          },
+        },
+      },
+    });
+
+    return matchups.map((m) => ({
+      id: m.id,
+      week: m.week,
+      type: m.type,
+      isComplete: m.isComplete,
+      isTie: m.isTie,
+      playedOn: m.playedOn,
+      winnerTeamId: m.winnerTeamId,
+      home: {
+        id: m.homeTeam.id,
+        name: m.homeTeam.name,
+        logoUrl: m.homeTeam.logoUrl,
+        score: Number(m.homeScore),
+        manager: m.homeTeam.memberships[0]?.user ?? null,
+      },
+      away: {
+        id: m.awayTeam.id,
+        name: m.awayTeam.name,
+        logoUrl: m.awayTeam.logoUrl,
+        score: Number(m.awayScore),
+        manager: m.awayTeam.memberships[0]?.user ?? null,
+      },
+    }));
+  },
+);
 
 export const getLeagueRecords = cache(async (leagueId: string) => {
   const records = await db.leagueRecord.findMany({

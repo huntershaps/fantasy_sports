@@ -5,8 +5,8 @@ export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
     <div
       aria-hidden
       className={cn(
-        "bg-surface-2 relative overflow-hidden rounded-lg",
-        "after:absolute after:inset-0 after:-translate-x-full after:animate-[shimmer_1.6s_infinite] after:bg-gradient-to-r after:from-transparent after:via-white/[0.06] after:to-transparent",
+        "bg-surface-2 relative overflow-hidden rounded-sm",
+        "after:absolute after:inset-0 after:-translate-x-full after:animate-[shimmer_1.4s_infinite] after:bg-gradient-to-r after:from-transparent after:via-white/[0.04] after:to-transparent",
         className,
       )}
       {...props}
@@ -14,33 +14,15 @@ export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-export function SkeletonCard({ className }: { className?: string }) {
+export function SkeletonRows({ rows = 5, className }: { rows?: number; className?: string }) {
   return (
-    <div
-      className={cn(
-        "border-line bg-surface rounded-card space-y-3 border p-5",
-        className,
-      )}
-    >
-      <Skeleton className="h-3 w-20" />
-      <Skeleton className="h-8 w-32" />
-      <Skeleton className="h-3 w-full" />
-      <Skeleton className="h-3 w-2/3" />
-    </div>
-  );
-}
-
-export function SkeletonList({
-  rows = 5,
-  className,
-}: {
-  rows?: number;
-  className?: string;
-}) {
-  return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("divide-line divide-y", className)}>
       {Array.from({ length: rows }).map((_, i) => (
-        <Skeleton key={i} className="h-14 w-full" />
+        <div key={i} className="flex items-center gap-3 py-3">
+          <Skeleton className="size-7 rounded-md" />
+          <Skeleton className="h-3 flex-1" />
+          <Skeleton className="h-3 w-12" />
+        </div>
       ))}
     </div>
   );

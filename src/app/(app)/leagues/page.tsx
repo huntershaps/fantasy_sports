@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Shield, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
-import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Badge } from "@/components/ui/badge";
 import { requireViewContext } from "@/lib/session";
 import { listLeagues } from "@/lib/queries/leagues";
 
@@ -15,113 +14,73 @@ export default async function LeaguesPage() {
   const leagues = await listLeagues(actor);
 
   return (
-    <PageContainer className="py-8 sm:py-10">
-      <header className="mb-8">
-        <p className="eyebrow mb-2">Your leagues</p>
-        <h1 className="text-4xl font-extrabold sm:text-5xl">Leagues</h1>
-        <p className="text-muted mt-3 max-w-2xl">
-          Each league keeps its own history, records, and hall of fame.
-        </p>
-      </header>
+    <PageContainer className="py-6">
+      <PageHeader
+        label="Your leagues"
+        title="Leagues"
+        description="Each league keeps its own history, records, and hall of fame."
+      />
 
       {leagues.length === 0 ? (
         <EmptyState
-          icon={Shield}
           title="You are not in a league yet"
           description="Once a commissioner adds you to a league, its full history shows up here."
         />
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <ul className="border-line divide-line divide-y border-t">
           {leagues.map((league) => (
-            <Link
-              key={league.id}
-              href={`/league/${league.slug}`}
-              style={{
-                ["--accent" as string]: league.accentColor,
-                ["--accent2" as string]: league.secondColor,
-              }}
-              className="group"
-            >
-              <Card
-                variant="raised"
-                className="relative h-full overflow-hidden transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-raised"
+            <li key={league.id}>
+              <Link
+                href={`/league/${league.slug}`}
+                className="group hover:bg-surface -mx-3 flex flex-wrap items-center gap-x-6 gap-y-3 px-3 py-4 transition-colors"
               >
-                <div
+                <span
                   aria-hidden
-                  className="field-lines absolute inset-x-0 top-0 h-32 opacity-40"
-                />
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-25"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, var(--accent), transparent 60%, var(--accent2))",
-                  }}
+                  className="h-9 w-1 shrink-0 rounded-full"
+                  style={{ backgroundColor: league.accentColor }}
                 />
 
-                <div className="relative p-6">
-                  <div className="mb-6 flex items-start justify-between gap-4">
-                    <span
-                      className="grid size-12 place-items-center rounded-2xl"
-                      style={{
-                        backgroundColor:
-                          "color-mix(in srgb, var(--accent) 18%, transparent)",
-                      }}
-                    >
-                      <Shield
-                        className="size-6"
-                        style={{ color: "var(--accent)" }}
-                      />
-                    </span>
-                    <Badge size="sm">Est. {league.foundedYear}</Badge>
-                  </div>
-
-                  <h2 className="text-2xl leading-tight font-extrabold text-balance">
+                <div className="min-w-[14rem] flex-1">
+                  <p className="group-hover:text-brand text-lg font-semibold transition-colors">
                     {league.name}
-                  </h2>
+                  </p>
                   {league.tagline ? (
-                    <p className="text-muted mt-2 text-sm leading-relaxed">
-                      {league.tagline}
-                    </p>
-                  ) : null}
-
-                  <dl className="border-line mt-6 grid grid-cols-3 gap-4 border-t pt-5">
-                    <div>
-                      <dt className="eyebrow mb-1">Seasons</dt>
-                      <dd className="stat-figure text-xl">{league.seasonCount}</dd>
-                    </div>
-                    <div>
-                      <dt className="eyebrow mb-1">Managers</dt>
-                      <dd className="stat-figure text-xl">{league.managerCount}</dd>
-                    </div>
-                    <div>
-                      <dt className="eyebrow mb-1">Current</dt>
-                      <dd className="stat-figure text-xl">
-                        {league.currentSeasonYear ?? "—"}
-                      </dd>
-                    </div>
-                  </dl>
-
-                  {league.champion ? (
-                    <div className="bg-surface-2 mt-5 flex items-center gap-3 rounded-xl p-3">
-                      <Trophy className="text-gold size-4 shrink-0" />
-                      <p className="min-w-0 truncate text-sm">
-                        <span className="text-subtle">
-                          {league.champion.year} champion:{" "}
-                        </span>
-                        <span className="font-semibold">
-                          {league.champion.managerName ?? league.champion.teamName}
-                        </span>
-                      </p>
-                    </div>
+                    <p className="text-muted mt-0.5 text-sm">{league.tagline}</p>
                   ) : null}
                 </div>
-              </Card>
-            </Link>
+
+                <dl className="flex items-end gap-x-7">
+                  <Metric label="Est." value={String(league.foundedYear)} />
+                  <Metric label="Seasons" value={String(league.seasonCount)} />
+                  <Metric label="Managers" value={String(league.managerCount)} />
+                </dl>
+
+                {league.champion ? (
+                  <div className="min-w-[11rem] text-right">
+                    <p className="label mb-0.5 flex items-center justify-end gap-1">
+                      <Trophy className="text-brand size-3" />
+                      {league.champion.year} champion
+                    </p>
+                    <p className="truncate text-sm font-medium">
+                      {league.champion.managerName ?? league.champion.teamName}
+                    </p>
+                  </div>
+                ) : null}
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </PageContainer>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="label mb-0.5">{label}</dt>
+      <dd className="figure-num tnum text-base">{value}</dd>
+    </div>
   );
 }
 

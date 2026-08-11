@@ -1,15 +1,18 @@
-import { Sidebar } from "@/components/shell/sidebar";
+import { Sidebar, type SidebarLeague } from "@/components/shell/sidebar";
 import { MobileNav } from "@/components/shell/mobile-nav";
 import { Topbar } from "@/components/shell/topbar";
 import { ImpersonationBanner } from "@/components/shell/impersonation-banner";
 import { requireViewContext } from "@/lib/session";
+import { getSidebarLeagues } from "@/lib/queries/leagues";
+import { cn } from "@/lib/utils";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const { actor, viewer, isImpersonating } = await requireViewContext();
+  const leagues: SidebarLeague[] = await getSidebarLeagues(actor, viewer.id);
 
   return (
-    <div className="min-h-dvh lg:pl-[248px]">
-      <Sidebar user={actor} />
+    <div className="min-h-dvh lg:pl-56">
+      <Sidebar user={actor} leagues={leagues} />
 
       <div className="flex min-h-dvh flex-col">
         {isImpersonating ? <ImpersonationBanner viewer={viewer} /> : null}
@@ -17,28 +20,39 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
         <main
           id="main"
-          className="flex-1 pb-24 lg:pb-12"
-          style={{ paddingBottom: "calc(6rem + env(safe-area-inset-bottom))" }}
+          className="flex-1"
+          style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}
         >
           {children}
         </main>
       </div>
 
-      <MobileNav user={actor} />
+      <MobileNav user={actor} leagues={leagues} />
     </div>
   );
 }
 
-/** Consistent page gutters. Every route body should sit inside one of these. */
+/** Page gutters. `wide` opts into the full 12-column working area for
+ *  data-dense pages; the default keeps prose at a readable measure. */
 export function PageContainer({
   children,
-  className = "",
+  className,
+  width = "default",
 }: {
   children: React.ReactNode;
   className?: string;
+  width?: "default" | "wide" | "narrow";
 }) {
   return (
-    <div className={`mx-auto w-full max-w-[1400px] px-4 sm:px-6 ${className}`}>
+    <div
+      className={cn(
+        "mx-auto w-full px-4 sm:px-6",
+        width === "wide" && "max-w-[1600px]",
+        width === "default" && "max-w-[1180px]",
+        width === "narrow" && "max-w-3xl",
+        className,
+      )}
+    >
       {children}
     </div>
   );

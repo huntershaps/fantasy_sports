@@ -1,316 +1,206 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
-import { Badge, ResultBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, SectionHeader } from "@/components/ui/card";
+import { Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Stat, StatGrid } from "@/components/ui/stat";
-import { Avatar } from "@/components/ui/avatar";
-import { MemoryCard } from "@/components/cards/memory-card";
+import { LeagueRow } from "@/components/dashboard/league-row";
+import { MemoryEntry, FeaturedMemory } from "@/components/cards/memory-card";
+import { MatchupCard } from "@/components/cards/matchup-card";
 import { requireViewContext } from "@/lib/session";
 import { getCareerStats, getManagerTeams, getTeamForm } from "@/lib/queries/career";
 import { listMemories, listOnThisDay } from "@/lib/queries/memories";
-import { getLatestAward } from "@/lib/queries/awards";
-import { cn, formatPercent, formatPoints, formatRecord, ordinal, winPercentage } from "@/lib/utils";
+import { getUpcomingForUser } from "@/lib/queries/leagues";
+import { formatRecord } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Home" };
+
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 export default async function HomePage() {
   const { actor, viewer } = await requireViewContext();
   const firstName = viewer.name.split(" ")[0];
 
-  const [teams, career, onThisDay, recentMemories, latestAward] = await Promise.all([
+  const [teams, career, onThisDay, myMemories, upcoming] = await Promise.all([
     getManagerTeams(viewer.id),
     getCareerStats(viewer.id),
-    listOnThisDay(actor, viewer.id, 6),
-    listMemories(actor, viewer.id, { filter: "mine", take: 8 }),
-    getLatestAward(actor, viewer.id),
+    listOnThisDay(actor, viewer.id, 5),
+    listMemories(actor, viewer.id, { filter: "mine", take: 9 }),
+    getUpcomingForUser(actor, viewer.id, 4),
   ]);
 
   const currentTeams = teams.filter((t) => t.isCurrent);
+  const forms = await Promise.all(currentTeams.map((team) => getTeamForm(team.id)));
+
+  const featured = onThisDay[0] ?? myMemories[0] ?? null;
+  const restOfArchive = (onThisDay.length > 0 ? onThisDay.slice(1) : myMemories.slice(1)).slice(0, 4);
 
   return (
-    <PageContainer className="space-y-12 py-8 sm:py-10">
-      <header>
-        <p className="eyebrow mb-2">Your dashboard</p>
-        <h1 className="text-4xl leading-[0.95] font-extrabold sm:text-6xl">
-          Welcome back, {firstName}.
-        </h1>
-        {career.seasons > 0 ? (
-          <p className="text-muted mt-4 max-w-2xl text-lg">
-            {career.seasons} season{career.seasons === 1 ? "" : "s"} on record ·{" "}
-            {formatRecord(career.wins, career.losses, career.ties)} all time
-            {career.championships > 0
-              ? ` · ${career.championships} championship${career.championships === 1 ? "" : "s"}`
-              : ""}
-            .
-          </p>
-        ) : null}
+    <PageContainer width="wide" className="py-6">
+      {/* Compact header: greeting and career line share one row on desktop. */}
+      <header className="border-line mb-6 flex flex-wrap items-end justify-between gap-x-8 gap-y-3 border-b pb-4">
+        <div>
+          <p className="label mb-1">{greeting()}, {firstName}</p>
+          <h1 className="text-2xl leading-none font-semibold">{viewer.name}</h1>
+        </div>
+
+        {/* Four fit across a 390px screen; total points is the one that can
+            wait for the profile page rather than wrapping to its own line. */}
+        <dl className="grid w-full grid-cols-4 gap-x-4 gap-y-2 sm:flex sm:w-auto sm:gap-x-7">
+          <CareerStat label="Career" value={formatRecord(career.wins, career.losses, career.ties)} />
+          <CareerStat label="Titles" value={String(career.championships)} brand={career.championships > 0} />
+          <CareerStat label="Playoffs" value={String(career.playoffAppearances)} />
+          <CareerStat label="Seasons" value={String(career.seasons)} />
+          <CareerStat
+            label="Total PF"
+            value={Math.round(career.pointsFor).toLocaleString()}
+            className="hidden sm:block"
+          />
+        </dl>
       </header>
 
-      {currentTeams.length > 0 ? (
-        <section>
-          <SectionHeader eyebrow="This season" title="Where you stand" />
-          <div className="grid gap-4 lg:grid-cols-2">
-            {currentTeams.map((team) => (
-              <CurrentSeasonCard key={team.id} team={team} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {latestAward ? (
-        <section>
-          <SectionHeader eyebrow="Recent achievement" title="Look what you did" />
-          <Card
-            variant="raised"
-            style={{ ["--award" as string]: latestAward.card.accentColor }}
-            className="relative overflow-hidden p-6 sm:p-8"
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 opacity-[0.12]"
-              style={{
-                background:
-                  "radial-gradient(90% 120% at 0% 0%, var(--award), transparent 60%)",
-              }}
-            />
-            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
-              <span
-                className="grid size-20 shrink-0 place-items-center rounded-3xl text-5xl"
-                style={{
-                  backgroundColor: "color-mix(in srgb, var(--award) 16%, transparent)",
-                }}
-              >
-                {latestAward.card.icon}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="eyebrow mb-1.5">{latestAward.card.seasonLabel}</p>
-                <h3 className="text-2xl font-extrabold sm:text-3xl">
-                  {latestAward.card.name}
-                </h3>
-                <p className="text-muted mt-2 leading-relaxed">
-                  {latestAward.card.description}
-                </p>
-              </div>
-              <Button asChild variant="outline" className="shrink-0">
-                <Link href={`/awards/${latestAward.card.id}`}>
-                  View award <ArrowRight />
+      <div className="grid gap-x-10 gap-y-8 lg:grid-cols-12">
+        {/* Primary column */}
+        <div className="lg:col-span-7 xl:col-span-8">
+          <Section>
+            <SectionHeader
+              label="Current season"
+              title="Your leagues"
+              rule={false}
+              action={
+                <Link href="/leagues" className="text-muted hover:text-ink text-xs">
+                  All leagues
                 </Link>
-              </Button>
-            </div>
-          </Card>
-        </section>
-      ) : null}
+              }
+            />
+            {currentTeams.length > 0 ? (
+              <div className="border-line border-t">
+                {currentTeams.map((team, i) => (
+                  <LeagueRow key={team.id} team={team} form={forms[i]} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No active season"
+                description="When a season is in progress, your standing shows up here."
+              />
+            )}
+          </Section>
 
-      <section>
-        <SectionHeader
-          eyebrow="This day in league history"
-          title={onThisDay.length > 0 ? "On this day" : "Nothing on this date"}
-          action={
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/memories">
-                All memories <ArrowRight />
-              </Link>
-            </Button>
-          }
-        />
-        {onThisDay.length > 0 ? (
-          <>
-            {/* Rail on mobile, grid on desktop — same cards, no duplicate markup. */}
-            <div className="rail -mx-4 px-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3">
-              {onThisDay.map((memory) => (
-                <MemoryCard
-                  key={memory.id}
-                  memory={memory}
-                  showLeague
-                  className="rail-item w-[85vw] max-w-sm sm:w-auto sm:max-w-none"
-                />
-              ))}
-            </div>
-          </>
-        ) : (
-          <EmptyState
-            icon={CalendarClock}
-            title="No anniversaries today"
-            description="Nothing happened in your leagues on this date. Check back tomorrow — the archive keeps every day."
-            action={
-              <Button asChild variant="subtle">
-                <Link href="/memories">Browse all memories</Link>
-              </Button>
-            }
-          />
-        )}
-      </section>
+          {upcoming.length > 0 ? (
+            <Section className="mt-8">
+              <SectionHeader label="This week" title="Coming up" />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {upcoming.map((matchup) => (
+                  <MatchupCard key={matchup.id} matchup={matchup} />
+                ))}
+              </div>
+            </Section>
+          ) : null}
 
-      {career.seasons > 0 ? (
-        <section>
-          <SectionHeader eyebrow="Career" title="Your numbers" />
-          <StatGrid columns={5}>
-            <Stat
-              label="Championships"
-              value={career.championships}
-              tone={career.championships > 0 ? "gold" : "muted"}
-              sub={career.runnerUps > 0 ? `${career.runnerUps} runner-up` : undefined}
+          <Section className="mt-8">
+            <SectionHeader
+              label="Your history"
+              title="Memories with you in them"
+              action={
+                <Link
+                  href="/memories?filter=mine"
+                  className="text-muted hover:text-ink inline-flex items-center gap-1 text-xs"
+                >
+                  See all <ArrowRight className="size-3" />
+                </Link>
+              }
             />
-            <Stat
-              label="Career record"
-              value={formatRecord(career.wins, career.losses, career.ties)}
-              sub={formatPercent(winPercentage(career.wins, career.losses, career.ties))}
-            />
-            <Stat
-              label="Total points"
-              value={Math.round(career.pointsFor).toLocaleString()}
-              sub={`${career.seasons} seasons`}
-            />
-            <Stat
-              label="Best week"
-              value={formatPoints(career.bestWeek)}
-              tone="field"
-              sub="Single-week high"
-            />
-            <Stat
-              label="Worst week"
-              value={formatPoints(career.worstWeek)}
-              tone="ember"
-              sub="Single-week low"
-            />
-          </StatGrid>
+            {myMemories.length > 0 ? (
+              <div className="border-line border-t">
+                {myMemories.slice(0, 6).map((memory) => (
+                  <MemoryEntry key={memory.id} memory={memory} showLeague />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No memories yet"
+                description="Once your leagues have history, the good and the unforgivable show up here."
+              />
+            )}
+          </Section>
+        </div>
 
-          <StatGrid columns={3} className="mt-4">
-            <Stat
-              label="Playoff appearances"
-              value={career.playoffAppearances}
-              size="sm"
-            />
-            <Stat
-              label="Biggest win"
-              value={`+${formatPoints(career.biggestWin)}`}
-              size="sm"
-              tone="field"
-            />
-            <Stat
-              label="Biggest loss"
-              value={`−${formatPoints(career.biggestLoss)}`}
-              size="sm"
-              tone="ember"
-            />
-          </StatGrid>
-        </section>
-      ) : null}
+        {/* Secondary column — editorial, not a sidebar of widgets */}
+        <aside className="lg:col-span-5 xl:col-span-4">
+          {featured ? (
+            <Section className="border-line border-t pt-5">
+              <FeaturedMemory
+                memory={featured}
+                label={onThisDay.length > 0 ? "This day in league history" : "From the archives"}
+              />
+            </Section>
+          ) : null}
 
-      <section>
-        <SectionHeader
-          eyebrow="Your history"
-          title="Memories with you in them"
-          action={
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/memories?filter=mine">
-                See all <ArrowRight />
-              </Link>
-            </Button>
-          }
-        />
-        {recentMemories.length > 0 ? (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {recentMemories.map((memory) => (
-              <MemoryCard key={memory.id} memory={memory} showLeague />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={Sparkles}
-            title="No memories yet"
-            description="Once your leagues have history, this is where the good, bad, and unforgivable moments show up."
-          />
-        )}
-      </section>
+          {restOfArchive.length > 0 ? (
+            <Section className="mt-7">
+              <SectionHeader label="Also on this date" />
+              <div className="border-line border-t">
+                {restOfArchive.map((memory) => (
+                  <MemoryEntry key={memory.id} memory={memory} showLeague />
+                ))}
+              </div>
+            </Section>
+          ) : null}
+
+          <Section className="mt-7">
+            <SectionHeader label="Career" title="Best and worst" />
+            <dl className="border-line divide-line divide-y border-t">
+              <SplitRow label="Best week" value={career.bestWeek.toFixed(2)} />
+              <SplitRow label="Worst week" value={career.worstWeek.toFixed(2)} />
+              <SplitRow label="Biggest win" value={`+${career.biggestWin.toFixed(2)}`} />
+              <SplitRow label="Biggest loss" value={`−${career.biggestLoss.toFixed(2)}`} />
+              <SplitRow
+                label="Runner-up finishes"
+                value={String(career.runnerUps)}
+              />
+            </dl>
+          </Section>
+        </aside>
+      </div>
     </PageContainer>
   );
 }
 
-async function CurrentSeasonCard({
-  team,
+function CareerStat({
+  label,
+  value,
+  brand,
+  className,
 }: {
-  team: Awaited<ReturnType<typeof getManagerTeams>>[number];
+  label: string;
+  value: string;
+  brand?: boolean;
+  className?: string;
 }) {
-  const form = await getTeamForm(team.id);
-  const playoffCutoff = 6;
-  const inPlayoffs = (team.rank ?? 99) <= playoffCutoff;
-
   return (
-    <Card variant="raised" className="overflow-hidden">
-      <div className="border-line flex items-center gap-3 border-b px-5 py-4">
-        <Avatar name={team.name} src={team.logoUrl} size="md" rounded="card" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-bold">{team.name}</p>
-          <Link
-            href={`/league/${team.league.slug}`}
-            className="text-subtle hover:text-muted truncate text-xs"
-          >
-            {team.league.name} · {team.year}
-          </Link>
-        </div>
-        <Badge tone={inPlayoffs ? "field" : "neutral"} size="sm">
-          {team.rank ? `${ordinal(team.rank)} place` : "Unranked"}
-        </Badge>
-      </div>
+    <div className={className}>
+      <dt className="label mb-0.5">{label}</dt>
+      <dd
+        className={`figure-num tnum text-lg ${brand ? "text-brand" : "text-ink"}`}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
 
-      <div className="divide-line grid grid-cols-3 divide-x">
-        <div className="p-4">
-          <p className="eyebrow mb-1">Record</p>
-          <p className="stat-figure text-2xl">
-            {formatRecord(team.wins, team.losses, team.ties)}
-          </p>
-        </div>
-        <div className="p-4">
-          <p className="eyebrow mb-1">Points for</p>
-          <p className="stat-figure text-2xl">{formatPoints(team.pointsFor)}</p>
-        </div>
-        <div className="p-4">
-          <p className="eyebrow mb-1">Streak</p>
-          <p
-            className={cn(
-              "stat-figure text-2xl",
-              form.streakType === "W" && "text-field",
-              form.streakType === "L" && "text-ember",
-            )}
-          >
-            {form.streakType ? `${form.streakType}${form.streak}` : "—"}
-          </p>
-        </div>
-      </div>
-
-      <div className="border-line flex items-center gap-4 border-t px-5 py-3.5">
-        <div className="flex items-center gap-2">
-          <span className="eyebrow">Form</span>
-          <div className="flex gap-1">
-            {form.recent.length > 0 ? (
-              form.recent.map((game) => (
-                <ResultBadge key={game.id} result={game.result} />
-              ))
-            ) : (
-              <span className="text-subtle text-xs">No games yet</span>
-            )}
-          </div>
-        </div>
-
-        {form.next ? (
-          <p className="text-subtle ml-auto truncate text-xs">
-            Next: wk {form.next.week} vs {form.next.opponent.name}
-          </p>
-        ) : (
-          <Link
-            href={`/league/${team.league.slug}`}
-            className="text-gold ml-auto shrink-0 text-xs font-semibold hover:underline"
-          >
-            League page
-          </Link>
-        )}
-      </div>
-    </Card>
+function SplitRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-2">
+      <dt className="text-muted text-xs">{label}</dt>
+      <dd className="tnum text-ink text-sm font-medium">{value}</dd>
+    </div>
   );
 }
 

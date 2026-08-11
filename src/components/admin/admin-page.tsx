@@ -15,7 +15,7 @@ export function AdminPageHeader({
       <Link href="/admin" className="text-muted hover:text-ink text-sm">
         ← Admin
       </Link>
-      <h1 className="mt-3 text-4xl font-extrabold sm:text-5xl">{title}</h1>
+      <h1 className="mt-3 text-2xl font-semibold">{title}</h1>
       {description ? (
         <p className="text-muted mt-3 max-w-2xl">{description}</p>
       ) : null}

@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { requireViewContext } from "@/lib/session";
 import { getMemory } from "@/lib/queries/memories";
@@ -31,105 +28,102 @@ export default async function MemoryPage({
   const memory = await getMemory(actor, id, viewer.id);
   if (!memory) notFound();
 
-  const yearsAgo =
-    new Date().getUTCFullYear() - memory.occurredOn.getUTCFullYear();
+  const yearsAgo = new Date().getUTCFullYear() - memory.occurredOn.getUTCFullYear();
 
   return (
-    <PageContainer className="max-w-3xl py-8 sm:py-10">
+    <PageContainer width="narrow" className="py-6">
       <Link
         href="/memories"
-        className="text-muted hover:text-ink mb-6 inline-flex items-center gap-1.5 text-sm font-medium"
+        className="text-muted hover:text-ink mb-6 inline-flex items-center gap-1.5 text-xs"
       >
-        <ArrowLeft className="size-4" />
-        All memories
+        <ArrowLeft className="size-3.5" />
+        The archive
       </Link>
 
-      <Card variant="raised" className="overflow-hidden">
-        <div className="border-line flex flex-wrap items-center gap-2 border-b px-6 py-4">
-          <Badge tone="gold" size="xs">
-            {memory.type.replace(/_/g, " ")}
-          </Badge>
-          <span className="text-subtle text-xs">
+      {/* Editorial treatment: standfirst, dateline, then the story. */}
+      <article>
+        <p className="label mb-3">{memory.type.replace(/_/g, " ")}</p>
+
+        <h1 className="font-display text-2xl leading-tight font-semibold text-balance sm:text-3xl">
+          {memory.card.rendered.text}
+        </h1>
+
+        {memory.card.rendered.detail ? (
+          <p className="text-muted mt-3 text-md">{memory.card.rendered.detail}</p>
+        ) : null}
+
+        <p className="text-faint border-line mt-5 border-y py-2.5 text-xs">
+          <time dateTime={memory.occurredOn.toISOString()}>
             {dateFormat.format(memory.occurredOn)}
-          </span>
-          {yearsAgo > 0 ? (
-            <span className="text-subtle text-xs">
-              · {yearsAgo} year{yearsAgo === 1 ? "" : "s"} ago
-            </span>
-          ) : null}
+          </time>
+          {yearsAgo > 0 ? ` · ${yearsAgo} year${yearsAgo === 1 ? "" : "s"} ago` : null}
+          {" · "}
           <Link
             href={`/league/${memory.card.leagueSlug}`}
-            className="text-gold ml-auto text-xs font-semibold hover:underline"
+            className="hover:text-ink underline-offset-2 hover:underline"
           >
             {memory.card.leagueName}
           </Link>
-        </div>
+        </p>
 
-        <div className="p-6 sm:p-8">
-          <p className="text-2xl leading-snug font-extrabold text-balance sm:text-3xl">
-            {memory.card.rendered.text}
-          </p>
-          {memory.card.rendered.detail ? (
-            <p className="text-muted mt-3 text-lg">{memory.card.rendered.detail}</p>
-          ) : null}
-          {memory.body ? (
-            <p className="text-muted mt-5 leading-relaxed">{memory.body}</p>
-          ) : null}
-        </div>
+        {memory.body ? (
+          <p className="text-ink mt-5 text-md leading-relaxed">{memory.body}</p>
+        ) : null}
 
         {memory.subjects.length > 0 ? (
-          <div className="border-line border-t px-6 py-5">
-            <p className="eyebrow mb-3">Who was involved</p>
-            <ul className="flex flex-wrap gap-3">
+          <section className="mt-8">
+            <p className="label mb-2.5">Who was involved</p>
+            <ul className="border-line divide-line divide-y border-t">
               {memory.subjects
                 .filter((subject) => subject.user)
                 .map((subject) => (
                   <li key={subject.id}>
                     <Link
                       href={`/profile/${subject.user!.id}`}
-                      className="border-line bg-surface-2 hover:border-line-strong flex items-center gap-2.5 rounded-xl border py-2 pr-3.5 pl-2 transition-colors"
+                      className="hover:bg-surface -mx-3 flex items-center gap-3 px-3 py-2.5 transition-colors"
                     >
                       <Avatar
                         name={subject.user!.name}
                         src={subject.user!.image}
                         size="sm"
+                        rounded="full"
                       />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">
                           {subject.user!.id === viewer.id ? "You" : subject.user!.name}
                         </span>
                         {subject.team ? (
-                          <span className="text-subtle block truncate text-xs">
+                          <span className="text-faint block truncate text-xs">
                             {subject.team.name}
                           </span>
                         ) : null}
                       </span>
+                      <span className="label shrink-0">{subject.role}</span>
                     </Link>
                   </li>
                 ))}
             </ul>
-          </div>
+          </section>
         ) : null}
 
         {memory.matchup || memory.record ? (
-          <div className="border-line flex flex-wrap gap-3 border-t px-6 py-5">
+          <nav className="border-line mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t pt-4 text-sm">
             {memory.matchup ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/matchup/${memory.matchup.id}`}>
-                  See the box score <ArrowRight />
-                </Link>
-              </Button>
+              <Link
+                href={`/matchup/${memory.matchup.id}`}
+                className="text-brand underline-offset-2 hover:underline"
+              >
+                See the box score →
+              </Link>
             ) : null}
             {memory.record ? (
-              <Button asChild variant="outline" size="sm">
-                <Link href="/records">
-                  {memory.record.label}: {memory.record.displayValue}
-                </Link>
-              </Button>
+              <Link href="/records" className="text-brand underline-offset-2 hover:underline">
+                {memory.record.label}: {memory.record.displayValue} →
+              </Link>
             ) : null}
-          </div>
+          </nav>
         ) : null}
-      </Card>
+      </article>
     </PageContainer>
   );
 }

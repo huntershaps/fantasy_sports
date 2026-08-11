@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "mfs-theme";
 
-/** Runs before paint so the correct theme class is on <html> for first render.
- *  Keep in sync with the STORAGE_KEY above. */
+/** Runs before paint so the correct theme class is on <html> for first render. */
 export const themeScript = `(function(){try{var t=localStorage.getItem("${STORAGE_KEY}");if(t==="light")document.documentElement.classList.add("light")}catch(e){}})()`;
 
 export function ThemeToggle({ className }: { className?: string }) {
@@ -29,18 +27,13 @@ export function ThemeToggle({ className }: { className?: string }) {
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
+    <button
+      type="button"
       onClick={toggle}
-      className={className}
-      aria-label={
-        mounted
-          ? `Switch to ${isLight ? "dark" : "light"} theme`
-          : "Toggle theme"
-      }
+      className={`text-faint hover:text-ink grid size-7 shrink-0 place-items-center rounded-md transition-colors ${className ?? ""}`}
+      aria-label={mounted ? `Switch to ${isLight ? "dark" : "light"} theme` : "Toggle theme"}
     >
-      {mounted && isLight ? <Moon /> : <Sun />}
-    </Button>
+      {mounted && isLight ? <Moon className="size-3.5" /> : <Sun className="size-3.5" />}
+    </button>
   );
 }

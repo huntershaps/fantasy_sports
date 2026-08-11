@@ -65,6 +65,7 @@ const ROUTES = [
   "/league/the-founders-league",
   "/league/the-founders-league?season=2023",
   "/league/the-founders-league/schedule?season=2024",
+  "/league/the-founders-league/standings?season=2024",
   "/league/sunday-scaries",
   "/teams",
   "/memories",

@@ -29,24 +29,24 @@ export default async function AdminLeaguesPage() {
     >
       <div className="space-y-4">
         {leagues.map((league) => (
-          <Card key={league.id} variant="raised" className="p-5">
+          <Card key={league.id} variant="bordered" className="p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="mb-1.5 flex flex-wrap items-center gap-2">
                   <Link
                     href={`/league/${league.slug}`}
-                    className="text-xl font-bold hover:underline"
+                    className="text-base font-semibold hover:underline"
                   >
                     {league.name}
                   </Link>
                   <Badge size="xs">{league.provider}</Badge>
                   {league.isArchived ? (
-                    <Badge tone="ember" size="xs">
+                    <Badge tone="loss" size="xs">
                       Archived
                     </Badge>
                   ) : null}
                 </div>
-                <p className="text-subtle text-xs">
+                <p className="text-faint text-xs">
                   /{league.slug} · est. {league.foundedYear} ·{" "}
                   {league._count.memberships} managers · {league._count.franchises}{" "}
                   franchises
@@ -54,7 +54,7 @@ export default async function AdminLeaguesPage() {
               </div>
 
               <div className="text-right">
-                <p className="eyebrow mb-1">Provider</p>
+                <p className="label mb-1">Provider</p>
                 <p className="text-sm font-semibold">
                   {league.providerCredential ? "Connected" : "Not connected"}
                 </p>
@@ -70,7 +70,7 @@ export default async function AdminLeaguesPage() {
                 >
                   {season.year}
                   {season.status === "IN_PROGRESS" ? (
-                    <span className="bg-ice size-1.5 rounded-full" />
+                    <span className="bg-info size-1.5 rounded-full" />
                   ) : null}
                 </Link>
               ))}

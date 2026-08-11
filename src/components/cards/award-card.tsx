@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { AwardTier } from "@/generated/prisma/enums";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export type AwardCardData = {
@@ -16,15 +15,9 @@ export type AwardCardData = {
   hasCertificate: boolean;
 };
 
-const TIER_LABEL: Record<AwardTier, string> = {
-  LEGENDARY: "Legendary",
-  GOLD: "Gold",
-  SILVER: "Silver",
-  BRONZE: "Bronze",
-  SHAME: "Hall of Shame",
-  FUN: "Curiosity",
-};
-
+/** A plinth in a trophy case: the mark sits on a shelf with an engraved
+ *  caption underneath. The description is held back until hover so a wall of
+ *  awards reads as objects rather than paragraphs. */
 export function AwardCard({
   award,
   className,
@@ -32,69 +25,77 @@ export function AwardCard({
   award: AwardCardData;
   className?: string;
 }) {
-  const isLegendary = award.tier === "LEGENDARY";
+  const isTop = award.tier === "LEGENDARY";
+  const isShame = award.tier === "SHAME";
 
   return (
     <Link
       href={`/awards/${award.id}`}
-      // The per-award accent is data, not a Tailwind class, so it comes in as
-      // a custom property the card's gradients and rings read from.
       style={{ ["--award" as string]: award.accentColor }}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl border p-5 transition-all duration-300",
-        "border-line bg-surface hover:-translate-y-0.5 hover:shadow-raised focus-visible:border-gold",
-        isLegendary && "border-[color:var(--award)]/40",
+        "group border-line hover:border-line-strong relative flex flex-col rounded-md border transition-colors",
+        isTop && "border-[color:var(--award)]/40",
         className,
       )}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.10] transition-opacity duration-300 group-hover:opacity-[0.18]"
-        style={{
-          background:
-            "radial-gradient(120% 90% at 50% -10%, var(--award), transparent 62%)",
-        }}
-      />
-
-      <div className="relative flex items-start justify-between gap-3">
+      <div className="flex flex-1 flex-col items-center px-4 pt-6 pb-4 text-center">
         <span
-          className="grid size-14 place-items-center rounded-2xl text-3xl transition-transform duration-300 group-hover:scale-110"
-          style={{ backgroundColor: "color-mix(in srgb, var(--award) 14%, transparent)" }}
+          className={cn(
+            "text-4xl transition-transform duration-200 group-hover:-translate-y-0.5",
+            isShame && "opacity-70 grayscale",
+          )}
         >
           {award.icon}
         </span>
-        <Badge
-          size="xs"
-          tone={award.tier === "SHAME" ? "ember" : isLegendary ? "gold" : "neutral"}
-        >
-          {TIER_LABEL[award.tier]}
-        </Badge>
-      </div>
 
-      <div className="relative mt-4 flex-1">
-        <p className="eyebrow mb-1.5">{award.seasonLabel}</p>
-        <h3 className="text-lg leading-tight font-bold text-balance">{award.name}</h3>
+        {/* The shelf. */}
+        <span
+          aria-hidden
+          className="mt-4 h-px w-10"
+          style={{ backgroundColor: "color-mix(in srgb, var(--award) 60%, transparent)" }}
+        />
+
+        <p className="text-ink mt-3 text-sm leading-tight font-semibold text-balance">
+          {award.name}
+        </p>
         {award.recipientName ? (
-          <p
-            className="mt-2 text-sm font-semibold"
-            style={{ color: "var(--award)" }}
-          >
-            {award.recipientName}
-          </p>
+          <p className="text-muted mt-1 truncate text-xs">{award.recipientName}</p>
         ) : null}
-        {award.teamName ? (
-          <p className="text-subtle truncate text-xs">{award.teamName}</p>
-        ) : null}
-        <p className="text-muted mt-3 line-clamp-2 text-sm leading-relaxed">
-          {award.description}
-        </p>
       </div>
 
-      {award.hasCertificate ? (
-        <p className="text-subtle relative mt-4 text-[11px] font-semibold tracking-wide uppercase">
-          Certificate available
-        </p>
-      ) : null}
+      <div className="border-line flex items-baseline justify-between gap-2 border-t px-3 py-2">
+        <span className="label truncate">{award.seasonLabel}</span>
+        {award.hasCertificate ? (
+          <span className="text-faint shrink-0 text-2xs">Certificate</span>
+        ) : null}
+      </div>
     </Link>
+  );
+}
+
+/** Groups awards under a season heading, the way a cabinet is arranged. */
+export function TrophyCase({
+  groups,
+  className,
+}: {
+  groups: { label: string; awards: AwardCardData[] }[];
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-8", className)}>
+      {groups.map((group) => (
+        <section key={group.label}>
+          <div className="border-line mb-3 flex items-baseline gap-3 border-t pt-3">
+            <h2 className="label">{group.label}</h2>
+            <span className="text-faint text-xs">{group.awards.length}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {group.awards.map((award) => (
+              <AwardCard key={award.id} award={award} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }

@@ -45,25 +45,25 @@ export default async function AdminMemoriesPage({
     >
       <div className="space-y-2">
         {memories.map((memory) => (
-          <Card key={memory.id} variant="flat" className="p-4">
+          <Card key={memory.id} variant="bordered" className="p-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex flex-wrap items-center gap-2">
                   <Badge size="xs">{memory.type.replace(/_/g, " ")}</Badge>
-                  <Badge size="xs" tone={memory.source === "MANUAL" ? "gold" : "neutral"}>
+                  <Badge size="xs" tone={memory.source === "MANUAL" ? "brand" : "neutral"}>
                     {memory.source}
                   </Badge>
-                  <span className="text-subtle text-xs">
+                  <span className="text-faint text-xs">
                     {dateFormat.format(memory.occurredOn)} · {memory.league.name} ·
                     importance {memory.importance}
                   </span>
                   {memory.isHidden ? (
-                    <Badge tone="ember" size="xs">
+                    <Badge tone="loss" size="xs">
                       Hidden
                     </Badge>
                   ) : null}
                   {memory.isFeatured ? (
-                    <Badge tone="gold" size="xs">
+                    <Badge tone="brand" size="xs">
                       Featured
                     </Badge>
                   ) : null}
@@ -113,7 +113,7 @@ export default async function AdminMemoriesPage({
         ) : (
           <span />
         )}
-        <span className="text-subtle text-sm">
+        <span className="text-faint text-sm">
           Page {page} of {Math.ceil(total / pageSize)}
         </span>
         {page * pageSize < total ? (

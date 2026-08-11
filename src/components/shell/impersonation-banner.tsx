@@ -4,15 +4,15 @@ import type { SessionUser } from "@/lib/session";
 
 export function ImpersonationBanner({ viewer }: { viewer: SessionUser }) {
   return (
-    <div className="bg-violet flex items-center justify-center gap-3 px-4 py-2 text-center text-sm font-medium text-white">
-      <Eye className="size-4 shrink-0" />
+    <div className="border-accent-2/40 bg-accent-2/12 text-ink flex items-center justify-center gap-2.5 border-b px-4 py-1.5 text-xs">
+      <Eye className="text-accent-2 size-3.5 shrink-0" />
       <span className="truncate">
-        Viewing the site as <strong>{viewer.name}</strong>
+        Viewing as <strong className="font-semibold">{viewer.name}</strong>
       </span>
       <form action={stopImpersonating}>
         <button
           type="submit"
-          className="shrink-0 rounded-md bg-white/20 px-2.5 py-1 text-xs font-semibold transition-colors hover:bg-white/30"
+          className="text-accent-2 shrink-0 font-medium underline-offset-2 hover:underline"
         >
           Exit
         </button>

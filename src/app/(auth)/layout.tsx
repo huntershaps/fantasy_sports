@@ -6,17 +6,17 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(0,520px)]">
       {/* Marketing panel. Hidden on mobile so the form gets the whole screen. */}
-      <aside className="bg-bg-subtle relative hidden overflow-hidden lg:block">
-        <div className="field-lines absolute inset-0 opacity-60" />
-        <div className="from-gold/12 absolute inset-0 bg-gradient-to-br via-transparent to-transparent" />
+      <aside className="bg-surface relative hidden overflow-hidden lg:block">
+        <div className=" absolute inset-0 opacity-60" />
+        <div className="from-brand/10 absolute inset-0 bg-gradient-to-br via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-12">
           <Link href="/" className="w-fit rounded-lg">
             <Wordmark />
           </Link>
 
           <div className="max-w-lg">
-            <p className="eyebrow mb-4">Est. the year your league started</p>
-            <h1 className="text-5xl leading-[0.95] font-extrabold text-balance xl:text-6xl">
+            <p className="label mb-4">Est. the year your league started</p>
+            <h1 className="text-3xl leading-tight font-semibold text-balance">
               Your league has a history.
             </h1>
             <p className="text-muted mt-6 text-lg leading-relaxed">
@@ -32,8 +32,8 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
               ["Trades never forgiven", "37"],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="eyebrow mb-1.5">{label}</dt>
-                <dd className="stat-figure text-gold text-3xl">{value}</dd>
+                <dt className="label mb-1.5">{label}</dt>
+                <dd className="figure-num text-brand text-3xl">{value}</dd>
               </div>
             ))}
           </dl>

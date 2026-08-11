@@ -19,13 +19,13 @@ export function RebuildPanel({
   );
 
   return (
-    <Card variant="raised" className="p-6">
+    <Card variant="bordered" className="p-6">
       <div className="mb-4 flex items-start gap-3">
-        <span className="bg-gold-wash grid size-10 shrink-0 place-items-center rounded-xl">
-          <RefreshCw className="text-gold size-5" />
+        <span className="bg-brand-dim/25 grid size-10 shrink-0 place-items-center rounded-xl">
+          <RefreshCw className="text-brand size-5" />
         </span>
         <div>
-          <h2 className="font-bold">Rebuild derived data</h2>
+          <h2 className="text-sm font-semibold">Rebuild derived data</h2>
           <p className="text-muted mt-1 text-sm leading-relaxed">
             Recomputes records, awards, certificates, and memories from raw game
             data. Anything created or corrected by hand is left untouched, so
@@ -51,8 +51,8 @@ export function RebuildPanel({
           role="status"
           className={`mt-4 rounded-xl border p-3 text-sm ${
             state.ok
-              ? "border-field/30 bg-field-wash text-field"
-              : "border-ember/30 bg-ember-wash text-ember"
+              ? "border-win/30 bg-win/15 text-win"
+              : "border-loss/30 bg-loss/15 text-loss"
           }`}
         >
           <p className="flex items-center gap-2 font-semibold">

@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import type { StandingsRow } from "@/lib/queries/leagues";
 import { cn, formatPoints, formatRecord } from "@/lib/utils";
 
-/** Table on desktop, stacked cards on mobile. A 9-column table does not
- *  survive a 375px screen, so the small layout is a different component
- *  rather than a horizontally scrolling compromise. */
+/** Dense table on desktop; a compact list on mobile. Not a scaled-down table —
+ *  the small layout drops points-against and diff, which nobody reads on a
+ *  phone, and keeps rank, team, record and PF. */
 export function StandingsTable({
   rows,
   playoffCutoff = 6,
@@ -21,120 +19,112 @@ export function StandingsTable({
 }) {
   return (
     <>
-      <div className="border-line rounded-card hidden overflow-hidden border sm:block">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-line bg-surface-2 border-b">
-              <th scope="col" className="eyebrow px-4 py-3 text-left">
-                #
-              </th>
-              <th scope="col" className="eyebrow px-4 py-3 text-left">
-                Team
-              </th>
-              <th scope="col" className="eyebrow px-4 py-3 text-right">
-                Record
-              </th>
-              <th scope="col" className="eyebrow px-4 py-3 text-right">
-                PF
-              </th>
-              <th scope="col" className="eyebrow px-4 py-3 text-right">
-                PA
-              </th>
-              <th scope="col" className="eyebrow px-4 py-3 text-right">
-                Diff
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-line divide-y">
-            {rows.map((row, index) => {
-              const isMine = highlightUserId && row.manager?.id === highlightUserId;
-              const diff = row.pointsFor - row.pointsAgainst;
-              return (
-                <tr
-                  key={row.id}
+      <table className="hidden w-full text-sm sm:table">
+        <thead>
+          <tr className="border-line border-b">
+            <th scope="col" className="label w-8 py-2 text-left font-semibold">
+              #
+            </th>
+            <th scope="col" className="label py-2 text-left font-semibold">
+              Team
+            </th>
+            <th scope="col" className="label w-16 py-2 text-right font-semibold">
+              W-L
+            </th>
+            <th scope="col" className="label w-24 py-2 text-right font-semibold">
+              PF
+            </th>
+            <th scope="col" className="label w-24 py-2 text-right font-semibold">
+              PA
+            </th>
+            <th scope="col" className="label w-20 py-2 text-right font-semibold">
+              Diff
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => {
+            const isMine = highlightUserId && row.manager?.id === highlightUserId;
+            const diff = row.pointsFor - row.pointsAgainst;
+            return (
+              <tr
+                key={row.id}
+                className={cn(
+                  "border-line hover:bg-surface border-b transition-colors",
+                  isMine && "bg-brand-dim/12",
+                  index === playoffCutoff - 1 && "border-b-line-strong",
+                )}
+              >
+                <td className="text-faint tnum py-2.5">{row.rank ?? index + 1}</td>
+                <td className="py-2.5">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-ink truncate font-medium">{row.name}</span>
+                    {championTeamId === row.id ? (
+                      <Trophy className="text-brand size-3 shrink-0 self-center" />
+                    ) : null}
+                    {row.manager ? (
+                      <Link
+                        href={`/profile/${row.manager.id}`}
+                        className="text-faint hover:text-muted truncate text-xs"
+                      >
+                        {row.manager.name}
+                      </Link>
+                    ) : null}
+                  </div>
+                </td>
+                <td className="tnum py-2.5 text-right font-medium">
+                  {formatRecord(row.wins, row.losses, row.ties)}
+                </td>
+                <td className="tnum py-2.5 text-right">{formatPoints(row.pointsFor)}</td>
+                <td className="tnum text-muted py-2.5 text-right">
+                  {formatPoints(row.pointsAgainst)}
+                </td>
+                <td
                   className={cn(
-                    "hover:bg-surface-2 transition-colors",
-                    isMine && "bg-gold-wash",
-                    index === playoffCutoff - 1 && "border-b-line-strong border-b-2",
+                    "tnum py-2.5 text-right",
+                    diff > 0 ? "text-win" : diff < 0 ? "text-loss" : "text-muted",
                   )}
                 >
-                  <td className="text-subtle px-4 py-3 tabular">{row.rank ?? index + 1}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={row.name} src={row.logoUrl} size="sm" rounded="card" />
-                      <div className="min-w-0">
-                        <p className="flex items-center gap-1.5 truncate font-semibold">
-                          {row.name}
-                          {championTeamId === row.id ? (
-                            <Trophy className="text-gold size-3.5 shrink-0" />
-                          ) : null}
-                        </p>
-                        {row.manager ? (
-                          <Link
-                            href={`/profile/${row.manager.id}`}
-                            className="text-subtle hover:text-muted truncate text-xs"
-                          >
-                            {row.manager.name}
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right font-semibold tabular">
-                    {formatRecord(row.wins, row.losses, row.ties)}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular">
-                    {formatPoints(row.pointsFor)}
-                  </td>
-                  <td className="text-muted px-4 py-3 text-right tabular">
-                    {formatPoints(row.pointsAgainst)}
-                  </td>
-                  <td
-                    className={cn(
-                      "px-4 py-3 text-right font-semibold tabular",
-                      diff > 0 ? "text-field" : diff < 0 ? "text-ember" : "text-muted",
-                    )}
-                  >
-                    {diff > 0 ? "+" : ""}
-                    {formatPoints(diff)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                  {diff > 0 ? "+" : ""}
+                  {diff.toFixed(1)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
 
-      <ul className="space-y-2 sm:hidden">
+      <ul className="border-line divide-line divide-y border-t sm:hidden">
         {rows.map((row, index) => {
           const isMine = highlightUserId && row.manager?.id === highlightUserId;
+          const rank = row.rank ?? index + 1;
           return (
             <li
               key={row.id}
               className={cn(
-                "border-line bg-surface rounded-card flex items-center gap-3 border p-3",
-                isMine && "border-gold/40 bg-gold-wash",
+                "flex items-center gap-3 py-2.5",
+                isMine && "bg-brand-dim/12 -mx-4 px-4",
               )}
             >
-              <span className="text-subtle w-5 shrink-0 text-center text-sm tabular">
-                {row.rank ?? index + 1}
+              <span
+                className={cn(
+                  "tnum w-5 shrink-0 text-center text-xs",
+                  rank <= playoffCutoff ? "text-ink font-medium" : "text-faint",
+                )}
+              >
+                {rank}
               </span>
-              <Avatar name={row.name} src={row.logoUrl} size="sm" rounded="card" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{row.name}</p>
-                <p className="text-subtle truncate text-xs">
-                  {row.manager?.name ?? "Unclaimed"} · {formatPoints(row.pointsFor)} PF
+                <p className="truncate text-sm font-medium">{row.name}</p>
+                <p className="text-faint truncate text-xs">
+                  {row.manager?.name ?? "Unclaimed"}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="stat-figure text-base">
+                <p className="tnum text-sm font-medium">
                   {formatRecord(row.wins, row.losses, row.ties)}
                 </p>
-                {index < playoffCutoff ? (
-                  <Badge tone="field" size="xs" className="mt-1">
-                    Playoff
-                  </Badge>
-                ) : null}
+                <p className="tnum text-faint text-xs">{formatPoints(row.pointsFor)}</p>
               </div>
             </li>
           );

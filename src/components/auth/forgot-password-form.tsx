@@ -17,11 +17,11 @@ export function ForgotPasswordForm() {
   if (state.sent) {
     return (
       <div className="space-y-5">
-        <div className="bg-field-wash text-field grid size-12 place-items-center rounded-2xl">
+        <div className="bg-win/15 text-win grid size-12 place-items-center rounded-2xl">
           <CheckCircle2 className="size-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-extrabold">Check your email</h1>
+          <h1 className="text-xl font-semibold">Check your email</h1>
           <p className="text-muted mt-2 text-sm leading-relaxed">
             If an account exists for that address, a reset link is on its way.
           </p>
@@ -29,13 +29,13 @@ export function ForgotPasswordForm() {
 
         {state.devLink ? (
           <div className="border-line bg-surface-2 rounded-xl border p-3">
-            <p className="eyebrow mb-1.5">Development only</p>
+            <p className="label mb-1.5">Development only</p>
             <p className="text-muted mb-2 text-xs">
               No mail transport is configured, so the link is shown here instead.
             </p>
             <Link
               href={state.devLink}
-              className="text-gold text-sm font-medium break-all hover:underline"
+              className="text-brand text-sm font-medium break-all hover:underline"
             >
               {state.devLink}
             </Link>
@@ -52,14 +52,14 @@ export function ForgotPasswordForm() {
   return (
     <form action={formAction} className="space-y-5">
       <div>
-        <h1 className="text-3xl font-extrabold">Reset your password</h1>
+        <h1 className="text-xl font-semibold">Reset your password</h1>
         <p className="text-muted mt-2 text-sm">
           We will send a link to get you back into the archive.
         </p>
       </div>
 
       {state.error ? (
-        <p className="text-ember text-sm" role="alert">
+        <p className="text-loss text-sm" role="alert">
           {state.error}
         </p>
       ) : null}
@@ -78,7 +78,7 @@ export function ForgotPasswordForm() {
       <SubmitButton />
 
       <p className="text-muted text-center text-sm">
-        <Link href="/login" className="text-gold font-medium hover:underline">
+        <Link href="/login" className="text-brand font-medium hover:underline">
           Back to sign in
         </Link>
       </p>

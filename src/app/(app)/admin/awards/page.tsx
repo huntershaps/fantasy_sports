@@ -26,7 +26,7 @@ export default async function AdminAwardsPage() {
     >
       <div className="grid gap-3 sm:grid-cols-2">
         {definitions.map((definition) => (
-          <Card key={definition.id} variant="flat" className="p-4">
+          <Card key={definition.id} variant="bordered" className="p-4">
             <div className="flex items-start gap-3">
               <span
                 className="grid size-11 shrink-0 place-items-center rounded-xl text-2xl"
@@ -39,11 +39,11 @@ export default async function AdminAwardsPage() {
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-1.5 font-semibold">
                   {definition.name}
-                  <Badge size="xs" tone={definition.tier === "SHAME" ? "ember" : "neutral"}>
+                  <Badge size="xs" tone={definition.tier === "SHAME" ? "loss" : "neutral"}>
                     {definition.tier}
                   </Badge>
                   {definition.grantsCertificate ? (
-                    <Badge size="xs" tone="gold">
+                    <Badge size="xs" tone="brand">
                       Certificate
                     </Badge>
                   ) : null}
@@ -51,7 +51,7 @@ export default async function AdminAwardsPage() {
                 <p className="text-muted mt-1 text-xs leading-relaxed">
                   {definition.description}
                 </p>
-                <p className="text-subtle mt-2 text-xs">
+                <p className="text-faint mt-2 text-xs">
                   <code>{definition.key}</code> · {definition.scope} ·{" "}
                   {definition._count.awards} granted ·{" "}
                   {definition.league?.name ?? "all leagues"}

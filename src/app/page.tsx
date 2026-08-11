@@ -1,25 +1,24 @@
 import Link from "next/link";
-import { ArrowRight, Flame, Repeat, Sparkles, Trophy } from "lucide-react";
 import { Wordmark } from "@/components/brand";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getActor } from "@/lib/session";
 
+/** Marketing surface. It is allowed larger type than the app, but it earns it
+ *  with one statement — not a wall of feature cards. */
 export default async function LandingPage() {
   const actor = await getActor();
 
   return (
     <div className="min-h-dvh">
-      <header className="border-line/60 sticky top-0 z-40 border-b backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+      <header className="border-line border-b">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
           <Wordmark />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             {actor ? (
               <Button asChild variant="primary" size="sm">
-                <Link href="/home">Open the museum</Link>
+                <Link href="/home">Open the archive</Link>
               </Button>
             ) : (
               <>
@@ -35,149 +34,84 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      <main id="main">
-        <section className="relative overflow-hidden">
-          <div className="field-lines pointer-events-none absolute inset-0 opacity-50" />
-          <div className="from-gold/10 pointer-events-none absolute inset-0 bg-gradient-to-b via-transparent to-transparent" />
+      <main id="main" className="mx-auto max-w-5xl px-5">
+        <section className="py-20 sm:py-28">
+          <p className="label mb-5">The permanent record of your league</p>
+          <h1 className="max-w-3xl text-4xl leading-[1.05] font-semibold text-balance sm:text-5xl">
+            Your league has a history. Most of it is already lost.
+          </h1>
+          <p className="text-muted mt-6 max-w-xl text-md leading-relaxed">
+            Every championship, every blowout, every trade nobody has forgiven —
+            kept permanently, and handed back to you on the anniversary of the
+            day it happened.
+          </p>
 
-          <div className="relative mx-auto max-w-6xl px-5 pt-20 pb-16 sm:pt-28 sm:pb-24">
-            <Badge tone="gold" size="md" className="mb-6">
-              <Trophy /> A permanent archive of your league
-            </Badge>
-
-            <h1 className="max-w-4xl text-5xl leading-[0.92] font-extrabold text-balance sm:text-7xl lg:text-8xl">
-              Your league has a history.
-            </h1>
-
-            <p className="text-muted mt-7 max-w-2xl text-lg leading-relaxed text-pretty sm:text-xl">
-              Every championship. Every heartbreak. Every ridiculous trade.
-              Every record-breaking Sunday. Kept forever, and served back to
-              you on the anniversary of the day it happened.
-            </p>
-
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <Button asChild variant="primary" size="lg">
-                <Link href={actor ? "/home" : "/register"}>
-                  {actor ? "Open the museum" : "Start your archive"}
-                  <ArrowRight />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/login">I already have an account</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-5 pb-20 sm:pb-28">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <ShowcaseCard
-              icon={Trophy}
-              tone="gold"
-              eyebrow="Award"
-              title="League Champion"
-              body="Collectible award cards and real, downloadable certificates for every title, every blowout, every embarrassment."
-              figure="2025"
-            />
-            <ShowcaseCard
-              icon={Sparkles}
-              tone="violet"
-              eyebrow="Memory · 3 years ago today"
-              title="You beat Noah 164.2–63.7"
-              body="Memories know who is reading them. The same game reads differently depending on which side of it you were on."
-              figure="164.2"
-            />
-            <ShowcaseCard
-              icon={Flame}
-              tone="ember"
-              eyebrow="League record"
-              title="Highest score, all time"
-              body="Records track their own lineage, so the site can tell you the exact Sunday an old record finally fell."
-              figure="182.64"
-            />
-            <ShowcaseCard
-              icon={Repeat}
-              tone="ice"
-              eyebrow="Trade · Aug 14, 2024"
-              title="The one nobody lets him forget"
-              body="Trades, waiver claims, drops, and draft picks — the full paper trail of every decision, good and catastrophic."
-              figure="—"
-            />
-            <Card
-              variant="raised"
-              className="from-gold/15 flex flex-col justify-between overflow-hidden bg-gradient-to-br to-transparent p-6 sm:col-span-2"
-            >
-              <div>
-                <p className="eyebrow mb-3">Did you know?</p>
-                <p className="text-2xl leading-snug font-bold text-balance sm:text-3xl">
-                  Your league has played 1,482 matchups. The site surfaces the
-                  interesting ones before you go looking.
-                </p>
-              </div>
-              <p className="text-muted mt-6 leading-relaxed">
-                The point is not a dashboard. The point is opening it on a
-                Tuesday and saying: I completely forgot that happened.
-              </p>
-            </Card>
-          </div>
-        </section>
-
-        <section className="border-line border-t">
-          <div className="mx-auto max-w-6xl px-5 py-20 text-center sm:py-28">
-            <h2 className="text-4xl font-extrabold text-balance sm:text-5xl">
-              Five years from now, this is where it all still lives.
-            </h2>
-            <Button asChild variant="primary" size="lg" className="mt-8">
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild variant="primary" size="lg">
               <Link href={actor ? "/home" : "/register"}>
-                {actor ? "Open the museum" : "Start your archive"}
-                <ArrowRight />
+                {actor ? "Open the archive" : "Start your archive"}
               </Link>
             </Button>
+            <Link href="/login" className="text-muted hover:text-ink text-sm">
+              I already have an account
+            </Link>
           </div>
+        </section>
+
+        {/* A specimen of what the product actually produces, rather than
+            feature cards describing it. */}
+        <section className="border-line border-t py-14">
+          <p className="label mb-6">A memory, as the site would show it to you</p>
+
+          <div className="max-w-2xl">
+            <p className="text-faint tnum mb-2 text-xs">
+              December 26, 2023 · Week 17 · The Founders League
+            </p>
+            <p className="font-display text-xl leading-tight font-semibold text-balance sm:text-2xl">
+              Liam Castellano won the 2023 championship, beating you 140.23–116.14.
+            </p>
+            <p className="text-muted mt-2 text-md">
+              The Big Dih over Overtime Optimists
+            </p>
+          </div>
+
+          <p className="text-muted mt-10 max-w-xl text-sm leading-relaxed">
+            The same game reads differently depending on who opens it. Your
+            opponent sees that they beat you. You see that you lost the final.
+          </p>
+        </section>
+
+        <section className="border-line border-t py-14">
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
+            {[
+              ["Seasons archived", "10"],
+              ["Matchups recorded", "832"],
+              ["Records tracked", "30"],
+              ["Trades never forgiven", "60"],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt className="label mb-1">{label}</dt>
+                <dd className="figure-num tnum text-2xl">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section className="border-line border-t py-20 sm:py-24">
+          <h2 className="max-w-2xl text-2xl leading-tight font-semibold text-balance sm:text-3xl">
+            Five years from now, this is where it all still lives.
+          </h2>
+          <Button asChild variant="primary" size="lg" className="mt-7">
+            <Link href={actor ? "/home" : "/register"}>
+              {actor ? "Open the archive" : "Start your archive"}
+            </Link>
+          </Button>
         </section>
       </main>
 
-      <footer className="border-line text-subtle border-t px-5 py-8 text-center text-sm">
+      <footer className="border-line text-faint border-t px-5 py-6 text-center text-xs">
         The Museum of Fantasy Sports
       </footer>
     </div>
-  );
-}
-
-const tones = {
-  gold: { wash: "bg-gold-wash", text: "text-gold" },
-  violet: { wash: "bg-violet-wash", text: "text-violet" },
-  ember: { wash: "bg-ember-wash", text: "text-ember" },
-  ice: { wash: "bg-ice-wash", text: "text-ice" },
-} as const;
-
-function ShowcaseCard({
-  icon: Icon,
-  tone,
-  eyebrow,
-  title,
-  body,
-  figure,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  tone: keyof typeof tones;
-  eyebrow: string;
-  title: string;
-  body: string;
-  figure: string;
-}) {
-  const t = tones[tone];
-  return (
-    <Card variant="raised" className="flex flex-col p-6">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className={`grid size-10 place-items-center rounded-xl ${t.wash}`}>
-          <Icon className={`size-5 ${t.text}`} />
-        </div>
-        <span className={`stat-figure text-2xl ${t.text}`}>{figure}</span>
-      </div>
-      <p className="eyebrow mb-2">{eyebrow}</p>
-      <h3 className="text-lg font-bold text-balance">{title}</h3>
-      <p className="text-muted mt-2.5 text-sm leading-relaxed">{body}</p>
-    </Card>
   );
 }

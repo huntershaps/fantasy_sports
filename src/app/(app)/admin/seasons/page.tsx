@@ -28,9 +28,9 @@ export default async function AdminSeasonsPage() {
     >
       <div className="space-y-2">
         {seasons.map((season) => (
-          <Card key={season.id} variant="flat" className="p-4">
+          <Card key={season.id} variant="bordered" className="p-4">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="stat-figure w-16 shrink-0 text-2xl">{season.year}</span>
+              <span className="figure-num w-16 shrink-0 text-2xl">{season.year}</span>
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2 font-semibold">
                   <Link
@@ -41,18 +41,18 @@ export default async function AdminSeasonsPage() {
                   </Link>
                   <Badge
                     size="xs"
-                    tone={season.status === "IN_PROGRESS" ? "ice" : "neutral"}
+                    tone={season.status === "IN_PROGRESS" ? "info" : "neutral"}
                   >
                     {season.status.replace(/_/g, " ")}
                   </Badge>
                 </p>
-                <p className="text-subtle text-xs">
+                <p className="text-faint text-xs">
                   {season._count.teams} teams · {season._count.matchups} matchups ·{" "}
                   {season._count.trades} trades · {season._count.draftPicks} picks
                   {season.champion ? ` · champion: ${season.champion.name}` : ""}
                 </p>
               </div>
-              <span className="text-subtle shrink-0 text-xs">
+              <span className="text-faint shrink-0 text-xs">
                 Week {season.currentWeek}
               </span>
             </div>

@@ -2,57 +2,39 @@ import Image from "next/image";
 import { cn, initials } from "@/lib/utils";
 
 const sizes = {
-  xs: "size-6 text-[10px]",
-  sm: "size-8 text-xs",
-  md: "size-10 text-sm",
-  lg: "size-14 text-base",
-  xl: "size-20 text-xl",
-  "2xl": "size-28 text-3xl",
+  xs: "size-5 text-[9px]",
+  sm: "size-6 text-[10px]",
+  md: "size-8 text-2xs",
+  lg: "size-10 text-xs",
+  xl: "size-14 text-base",
+  "2xl": "size-20 text-xl",
 } as const;
 
-/** Deterministic tint per name so unclaimed teams still look intentional. */
-const tints = [
-  "bg-gold-wash text-gold",
-  "bg-field-wash text-field",
-  "bg-ice-wash text-ice",
-  "bg-violet-wash text-violet",
-  "bg-ember-wash text-ember",
-];
-
-function tintFor(seed: string) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-  return tints[Math.abs(hash) % tints.length];
-}
-
+/** Monogram crests rather than coloured circles. A team identity should look
+ *  like a badge on a jersey, not a chat avatar. */
 export function Avatar({
   name,
   src,
   size = "md",
   className,
-  rounded = "full",
+  rounded = "md",
 }: {
   name: string;
   src?: string | null;
   size?: keyof typeof sizes;
   className?: string;
-  rounded?: "full" | "card";
+  rounded?: "full" | "md";
 }) {
-  const shape = rounded === "full" ? "rounded-full" : "rounded-xl";
+  const shape = rounded === "full" ? "rounded-full" : "rounded-md";
 
   if (src) {
     return (
       <Image
         src={src}
         alt=""
-        width={112}
-        height={112}
-        className={cn(
-          "border-line shrink-0 border object-cover",
-          shape,
-          sizes[size],
-          className,
-        )}
+        width={80}
+        height={80}
+        className={cn("border-line shrink-0 border object-cover", shape, sizes[size], className)}
       />
     );
   }
@@ -61,10 +43,9 @@ export function Avatar({
     <span
       aria-hidden
       className={cn(
-        "grid shrink-0 place-items-center font-bold",
+        "bg-surface-3 text-muted border-line grid shrink-0 place-items-center border font-semibold tracking-wide",
         shape,
         sizes[size],
-        tintFor(name),
         className,
       )}
     >

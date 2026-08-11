@@ -1,39 +1,33 @@
 import { cn } from "@/lib/utils";
 
-/** Museum mark: a trophy silhouette framed by a pediment — "hall of fame",
- *  not "fantasy football clip art". */
+/** A museum plaque: engraved rule, monogram, engraved rule. Reads as an
+ *  institution rather than a football app, which is the whole premise. */
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      fill="none"
-      aria-hidden
-      className={cn("size-8", className)}
-    >
-      <rect width="32" height="32" rx="9" fill="var(--c-gold)" />
-      <path
-        d="M6 11.5 16 5.5l10 6"
-        stroke="var(--c-text-inverse)"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden className={cn("size-6", className)}>
+      <rect
+        x="0.75"
+        y="0.75"
+        width="26.5"
+        height="26.5"
+        rx="3.25"
+        stroke="var(--c-brand)"
+        strokeWidth="1.5"
       />
-      <path
-        d="M11 14v3.2a5 5 0 0 0 10 0V14z"
-        fill="var(--c-text-inverse)"
-      />
-      <path
-        d="M11 15h-1.6a2.4 2.4 0 0 0 2.4 2.4M21 15h1.6a2.4 2.4 0 0 1-2.4 2.4"
-        stroke="var(--c-text-inverse)"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M16 22.2v2.3M12.8 26h6.4"
-        stroke="var(--c-text-inverse)"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
+      <path d="M7 8.5h14" stroke="var(--c-brand)" strokeWidth="1.5" strokeLinecap="square" />
+      <path d="M7 19.5h14" stroke="var(--c-brand)" strokeWidth="1.5" strokeLinecap="square" />
+      <text
+        x="14"
+        y="17"
+        textAnchor="middle"
+        fill="var(--c-brand)"
+        fontFamily="var(--font-archivo), sans-serif"
+        fontSize="8.5"
+        fontWeight="700"
+        letterSpacing="0.02em"
+      >
+        MFS
+      </text>
     </svg>
   );
 }
@@ -46,14 +40,14 @@ export function Wordmark({
   compact?: boolean;
 }) {
   return (
-    <span className={cn("flex items-center gap-2.5", className)}>
+    <span className={cn("flex items-center gap-2", className)}>
       <BrandMark />
       {!compact && (
         <span className="font-display leading-none">
-          <span className="block text-[13px] font-extrabold tracking-[0.18em] uppercase">
+          <span className="text-ink block text-xs font-semibold tracking-[0.13em] uppercase">
             The Museum
           </span>
-          <span className="text-subtle block text-[10px] font-semibold tracking-[0.16em] uppercase">
+          <span className="text-faint mt-0.5 block text-[9px] font-medium tracking-[0.13em] uppercase">
             of Fantasy Sports
           </span>
         </span>

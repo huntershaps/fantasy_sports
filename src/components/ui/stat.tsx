@@ -1,18 +1,17 @@
 import { cn } from "@/lib/utils";
 
 const sizes = {
-  sm: "text-2xl",
-  md: "text-[2rem] sm:text-4xl",
-  lg: "text-4xl sm:text-5xl",
-  xl: "text-5xl sm:text-7xl",
+  xs: "text-base",
+  sm: "text-lg",
+  md: "text-xl",
+  lg: "text-2xl",
 } as const;
 
 const tones = {
   default: "text-ink",
-  gold: "text-gold",
-  field: "text-field",
-  ember: "text-ember",
-  ice: "text-ice",
+  brand: "text-brand",
+  win: "text-win",
+  loss: "text-loss",
   muted: "text-muted",
 } as const;
 
@@ -33,14 +32,14 @@ export function Stat({
 }) {
   return (
     <div className={cn("min-w-0", className)}>
-      <p className="eyebrow mb-1.5">{label}</p>
-      <p className={cn("stat-figure", sizes[size], tones[tone])}>{value}</p>
-      {sub ? <p className="text-subtle mt-1.5 text-xs">{sub}</p> : null}
+      <p className="label mb-1">{label}</p>
+      <p className={cn("figure-num tnum", sizes[size], tones[tone])}>{value}</p>
+      {sub ? <p className="text-faint mt-0.5 truncate text-xs">{sub}</p> : null}
     </div>
   );
 }
 
-/** Responsive grid of stats with hairline dividers — the career/season stat strip. */
+/** Stats separated by whitespace and hairlines rather than boxed cells. */
 export function StatGrid({
   className,
   children,
@@ -52,7 +51,7 @@ export function StatGrid({
 }) {
   const cols = {
     2: "grid-cols-2",
-    3: "grid-cols-2 sm:grid-cols-3",
+    3: "grid-cols-3",
     4: "grid-cols-2 sm:grid-cols-4",
     5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
   }[columns];
@@ -60,8 +59,8 @@ export function StatGrid({
   return (
     <div
       className={cn(
-        "divide-line border-line grid divide-x divide-y overflow-hidden rounded-card border",
-        "[&>*]:p-4 sm:[&>*]:p-5",
+        "border-line divide-line grid divide-x border-y",
+        "[&>*]:px-4 [&>*]:py-3 [&>*:first-child]:pl-0",
         cols,
         className,
       )}

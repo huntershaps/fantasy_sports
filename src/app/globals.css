@@ -4,96 +4,78 @@
 
 /* ===========================================================================
    Design tokens
-   Dark is the primary theme — the sports-media aesthetic lives there. Light is
-   a fully supported alternate, tuned warm so it reads like newsprint/scrapbook
-   rather than a washed-out inversion of the dark theme.
+
+   Principles this file enforces:
+   - Hierarchy comes from size, weight, colour and position — not from making
+     everything bold. Body weight is 400/500; 600 is a heading; 700 is rare.
+   - Borders are structural, not decorative. They sit barely above the surface
+     they separate so the eye reads content, not containers.
+   - One brand colour (brass). Semantic colours are reserved for genuine
+     signal — a win, a loss, an error — and never used for emphasis.
    =========================================================================== */
 
 :root {
-  /* Surfaces, dark theme (default) */
-  --c-bg: #07080b;
-  --c-bg-subtle: #0b0d12;
-  --c-surface: #11141b;
-  --c-surface-2: #171b24;
-  --c-surface-3: #1f2430;
-  --c-line: #242a36;
-  --c-line-strong: #333a48;
+  /* Surfaces — dark is the primary theme */
+  --c-base: #0a0b0d;
+  --c-surface: #101215;
+  --c-surface-2: #16181c;
+  --c-surface-3: #1c1f24;
+  --c-line: #1e2126;
+  --c-line-strong: #2b2f36;
 
   /* Text */
-  --c-text: #f3f5f9;
-  --c-text-muted: #9aa3b2;
-  --c-text-subtle: #6a7383;
-  --c-text-inverse: #07080b;
+  --c-text: #e9ebee;
+  --c-text-2: #969ba4;
+  --c-text-3: #676c75;
+  --c-text-inverse: #0a0b0d;
 
-  /* Brand / semantic accents */
-  --c-gold: #f5c518;
-  --c-gold-deep: #b8890a;
-  --c-field: #17c26d;
-  --c-ember: #f4523b;
-  --c-ice: #4d9cff;
-  --c-violet: #9061f9;
+  /* Brand: aged brass. Museum plaque, not highlighter. */
+  --c-brand: #c9a227;
+  --c-brand-hi: #e0b933;
+  --c-brand-dim: #6b5615;
 
-  /* Tinted washes for card glows and badge fills */
-  --c-gold-wash: rgb(245 197 24 / 0.12);
-  --c-field-wash: rgb(23 194 109 / 0.12);
-  --c-ember-wash: rgb(244 82 59 / 0.12);
-  --c-ice-wash: rgb(77 156 255 / 0.12);
-  --c-violet-wash: rgb(144 97 249 / 0.12);
+  /* Semantic — deliberately desaturated so they read as data, not decoration */
+  --c-win: #4f9d63;
+  --c-loss: #c2554d;
+  --c-info: #5183c4;
+  --c-accent-2: #8a6db1;
 
-  /* Elevation. Dark UIs need light-leak rims, not just drop shadows. */
-  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset,
-    0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
-  --shadow-raised: 0 1px 0 0 rgb(255 255 255 / 0.06) inset,
-    0 4px 8px rgb(0 0 0 / 0.35), 0 24px 48px -20px rgb(0 0 0 / 0.7);
-  --shadow-pop: 0 1px 0 0 rgb(255 255 255 / 0.08) inset,
-    0 8px 16px rgb(0 0 0 / 0.4), 0 40px 80px -24px rgb(0 0 0 / 0.8);
+  /* Per-league identity, overridden inline on league routes */
+  --c-league: var(--c-brand);
 
-  /* Per-league accent. Overridden inline on league routes. */
-  --c-accent: var(--c-gold);
-  --c-accent-2: #0b7a75;
-
-  --radius-card: 0.875rem;
-  --radius-panel: 1.25rem;
+  /* Elevation. One shadow, used rarely. */
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px -6px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 2px 6px rgb(0 0 0 / 0.35), 0 16px 32px -16px rgb(0 0 0 / 0.6);
 }
 
 .light {
-  --c-bg: #f7f6f3;
-  --c-bg-subtle: #f1efea;
+  --c-base: #f6f5f2;
   --c-surface: #ffffff;
   --c-surface-2: #faf9f6;
-  --c-surface-3: #f1efea;
-  --c-line: #e2ded6;
-  --c-line-strong: #cdc7bb;
+  --c-surface-3: #f0eee9;
+  --c-line: #e4e1da;
+  --c-line-strong: #cfcbc1;
 
-  --c-text: #12141a;
-  --c-text-muted: #5a6070;
-  --c-text-subtle: #868d9c;
+  --c-text: #14161a;
+  --c-text-2: #5c6169;
+  --c-text-3: #868b94;
   --c-text-inverse: #ffffff;
 
-  --c-gold: #b8890a;
-  --c-gold-deep: #8a660a;
-  --c-field: #0e9c56;
-  --c-ember: #d13a24;
-  --c-ice: #2b6fd6;
-  --c-violet: #6f42d9;
+  --c-brand: #8a6d12;
+  --c-brand-hi: #a8850f;
+  --c-brand-dim: #d8cfa8;
 
-  --c-gold-wash: rgb(184 137 10 / 0.1);
-  --c-field-wash: rgb(14 156 86 / 0.1);
-  --c-ember-wash: rgb(209 58 36 / 0.1);
-  --c-ice-wash: rgb(43 111 214 / 0.1);
-  --c-violet-wash: rgb(111 66 217 / 0.1);
+  --c-win: #2f7a45;
+  --c-loss: #a83a32;
+  --c-info: #2f63a8;
+  --c-accent-2: #6b4f96;
 
-  --shadow-card: 0 1px 2px rgb(18 20 26 / 0.06),
-    0 8px 20px -14px rgb(18 20 26 / 0.25);
-  --shadow-raised: 0 2px 6px rgb(18 20 26 / 0.08),
-    0 20px 40px -20px rgb(18 20 26 / 0.3);
-  --shadow-pop: 0 8px 16px rgb(18 20 26 / 0.1),
-    0 40px 72px -28px rgb(18 20 26 / 0.35);
+  --shadow-1: 0 1px 2px rgb(20 22 26 / 0.06), 0 4px 12px -8px rgb(20 22 26 / 0.18);
+  --shadow-2: 0 2px 6px rgb(20 22 26 / 0.08), 0 16px 32px -18px rgb(20 22 26 / 0.22);
 }
 
 @theme inline {
-  --color-bg: var(--c-bg);
-  --color-bg-subtle: var(--c-bg-subtle);
+  --color-base: var(--c-base);
   --color-surface: var(--c-surface);
   --color-surface-2: var(--c-surface-2);
   --color-surface-3: var(--c-surface-3);
@@ -101,43 +83,57 @@
   --color-line-strong: var(--c-line-strong);
 
   --color-ink: var(--c-text);
-  --color-muted: var(--c-text-muted);
-  --color-subtle: var(--c-text-subtle);
+  --color-muted: var(--c-text-2);
+  --color-faint: var(--c-text-3);
   --color-inverse: var(--c-text-inverse);
 
-  --color-gold: var(--c-gold);
-  --color-gold-deep: var(--c-gold-deep);
-  --color-field: var(--c-field);
-  --color-ember: var(--c-ember);
-  --color-ice: var(--c-ice);
-  --color-violet: var(--c-violet);
-  --color-accent: var(--c-accent);
+  --color-brand: var(--c-brand);
+  --color-brand-hi: var(--c-brand-hi);
+  --color-brand-dim: var(--c-brand-dim);
+  --color-win: var(--c-win);
+  --color-loss: var(--c-loss);
+  --color-info: var(--c-info);
   --color-accent-2: var(--c-accent-2);
-
-  --color-gold-wash: var(--c-gold-wash);
-  --color-field-wash: var(--c-field-wash);
-  --color-ember-wash: var(--c-ember-wash);
-  --color-ice-wash: var(--c-ice-wash);
-  --color-violet-wash: var(--c-violet-wash);
+  --color-league: var(--c-league);
 
   --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
-  --radius-card: var(--radius-card);
-  --radius-panel: var(--radius-panel);
+  /* Compact, deliberate scale. 30px is the largest thing on an app page;
+     anything bigger belongs only on marketing surfaces. */
+  --text-2xs: 0.6875rem; /* 11 — labels, eyebrows */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem; /* 12 — metadata */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem; /* 13 — dense UI, table cells */
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem; /* 14 — body default */
+  --text-base--line-height: 1.375rem;
+  --text-md: 0.9375rem; /* 15 — comfortable prose */
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.0625rem; /* 17 — card titles */
+  --text-lg--line-height: 1.375rem;
+  --text-xl: 1.25rem; /* 20 — section headings */
+  --text-xl--line-height: 1.5rem;
+  --text-2xl: 1.5rem; /* 24 — page titles */
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.875rem; /* 30 — display */
+  --text-3xl--line-height: 2.125rem;
+  --text-4xl: 2.5rem; /* 40 — marketing only */
+  --text-4xl--line-height: 2.625rem;
+  --text-5xl: 3.5rem; /* 56 — marketing hero only */
+  --text-5xl--line-height: 3.5rem;
 
-  --shadow-card: var(--shadow-card);
-  --shadow-raised: var(--shadow-raised);
-  --shadow-pop: var(--shadow-pop);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
 
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
 }
-
-/* ===========================================================================
-   Base
-   =========================================================================== */
 
 @layer base {
   html {
@@ -150,10 +146,12 @@
   }
 
   body {
-    background-color: var(--c-bg);
+    background-color: var(--c-base);
     color: var(--c-text);
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1,
@@ -161,38 +159,42 @@
   h3,
   h4 {
     font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: -0.022em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     text-wrap: balance;
   }
 
-  /* Scores and records must never shift width as they tick. */
-  .tabular,
-  table {
+  /* Scores and records must not shift width as they change. */
+  table,
+  .tnum {
     font-variant-numeric: tabular-nums;
   }
 
   ::selection {
-    background: var(--c-gold);
+    background: var(--c-brand);
     color: var(--c-text-inverse);
   }
 
   :focus-visible {
-    outline: 2px solid var(--c-gold);
+    outline: 2px solid var(--c-brand);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 2px;
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
     background: var(--c-line-strong);
-    border-radius: 999px;
-    border: 3px solid var(--c-bg);
+    border-radius: 99px;
+    border: 4px solid var(--c-base);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--c-text-3);
   }
 }
 
@@ -200,44 +202,30 @@
    Utilities
    =========================================================================== */
 
-@utility stat-figure {
+/* The small caps label above a stat or section. The one piece of decoration
+   the system allows, because it does real hierarchical work. */
+@utility label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-3);
+  line-height: 1rem;
+}
+
+/* Numeric display for stats. Tabular, tight, never bolder than 600. */
+@utility figure-num {
   font-family: var(--font-display), sans-serif;
   font-variant-numeric: tabular-nums;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
 }
 
-/* Small all-caps label used above stat blocks and section headers. */
-@utility eyebrow {
-  font-family: var(--font-display), sans-serif;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--c-text-subtle);
-}
-
-/* Hairline field-yard-line texture for hero sections. Deliberately faint —
-   the data is the subject, not the football graphics. */
-@utility field-lines {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0,
-    transparent 63px,
-    rgb(255 255 255 / 0.035) 63px,
-    rgb(255 255 255 / 0.035) 64px
-  );
-}
-
-@utility noise {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-}
-
-/* Horizontal card rails on mobile — snap without a visible scrollbar. */
+/* Horizontal card rail on mobile. */
 @utility rail {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -261,6 +249,11 @@
   display: none;
 }
 
+/* Editorial rule used to open a section without wrapping it in a box. */
+@utility rule {
+  border-top: 1px solid var(--c-line);
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -275,5 +268,17 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  aside,
+  nav,
+  header button {
+    display: none !important;
   }
 }

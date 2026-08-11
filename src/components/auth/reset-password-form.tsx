@@ -17,11 +17,11 @@ export function ResetPasswordForm() {
   if (state.done) {
     return (
       <div className="space-y-5">
-        <div className="bg-field-wash text-field grid size-12 place-items-center rounded-2xl">
+        <div className="bg-win/15 text-win grid size-12 place-items-center rounded-2xl">
           <CheckCircle2 className="size-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-extrabold">Password updated</h1>
+          <h1 className="text-xl font-semibold">Password updated</h1>
           <p className="text-muted mt-2 text-sm">You can sign in with it now.</p>
         </div>
         <Button asChild variant="primary" size="lg" className="w-full">
@@ -34,7 +34,7 @@ export function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="space-y-5">
-        <h1 className="text-2xl font-extrabold">Link missing</h1>
+        <h1 className="text-xl font-semibold">Link missing</h1>
         <p className="text-muted text-sm">
           This page needs a reset link from your email.
         </p>
@@ -48,7 +48,7 @@ export function ResetPasswordForm() {
   return (
     <form action={formAction} className="space-y-5">
       <div>
-        <h1 className="text-3xl font-extrabold">Choose a new password</h1>
+        <h1 className="text-xl font-semibold">Choose a new password</h1>
       </div>
 
       <input type="hidden" name="token" value={token} />
@@ -56,7 +56,7 @@ export function ResetPasswordForm() {
       {state.error ? (
         <div
           role="alert"
-          className="border-ember/30 bg-ember-wash text-ember flex items-start gap-2.5 rounded-xl border p-3 text-sm"
+          className="border-loss/30 bg-loss/15 text-loss flex items-start gap-2.5 rounded-xl border p-3 text-sm"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           {state.error}

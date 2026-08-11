@@ -1,73 +1,114 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
+import { PageHeader, Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
-import { MemoryCard } from "@/components/cards/memory-card";
+import { MemoryEntry, FeaturedMemory } from "@/components/cards/memory-card";
 import { requireViewContext } from "@/lib/session";
 import {
   MEMORY_FILTERS,
   countMemories,
   listMemories,
+  type MemoryCardData,
   type MemoryFilter,
 } from "@/lib/queries/memories";
+import { listLeagues } from "@/lib/queries/leagues";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Memories" };
 
-const PAGE_SIZE = 40;
+const PAGE_SIZE = 60;
+
+const yearFormat = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 export default async function MemoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string }>;
+  searchParams: Promise<{ filter?: string; page?: string; league?: string }>;
 }) {
-  const { filter: rawFilter, page: rawPage } = await searchParams;
+  const { filter: rawFilter, page: rawPage, league: leagueSlug } = await searchParams;
   const { actor, viewer } = await requireViewContext();
 
   const filter = (MEMORY_FILTERS.find((f) => f.value === rawFilter)?.value ??
     "all") as MemoryFilter;
   const page = Math.max(1, Number(rawPage) || 1);
 
+  const leagues = await listLeagues(actor);
+  const league = leagues.find((l) => l.slug === leagueSlug);
+
   const [memories, total] = await Promise.all([
     listMemories(actor, viewer.id, {
       filter,
+      leagueId: league?.id,
       take: PAGE_SIZE,
       skip: (page - 1) * PAGE_SIZE,
+      order: "chronological",
     }),
-    countMemories(actor),
+    countMemories(actor, league?.id),
   ]);
 
   const hasMore = memories.length === PAGE_SIZE;
+  // Feature the most notable item on the page, not simply the newest one.
+  const showFeature = page === 1 && memories.length > 0;
+  const feature = showFeature
+    ? [...memories].sort((a, b) => b.importance - a.importance)[0]
+    : null;
+  const body = feature ? memories.filter((m) => m.id !== feature.id) : memories;
+
+  // Group the feed by year so a decade of history reads as a chronicle.
+  const byYear = new Map<string, MemoryCardData[]>();
+  for (const memory of body) {
+    const year = yearFormat.format(memory.occurredOn);
+    const list = byYear.get(year) ?? [];
+    list.push(memory);
+    byYear.set(year, list);
+  }
+
+  const query = (next: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams();
+    if (filter !== "all") params.set("filter", filter);
+    if (league) params.set("league", league.slug);
+    for (const [key, value] of Object.entries(next)) {
+      if (value === undefined) params.delete(key);
+      else params.set(key, String(value));
+    }
+    const qs = params.toString();
+    return qs ? `/memories?${qs}` : "/memories";
+  };
 
   return (
-    <PageContainer className="py-8 sm:py-10">
-      <header className="mb-6">
-        <p className="eyebrow mb-2">The archive</p>
-        <h1 className="text-4xl font-extrabold sm:text-5xl">Memories</h1>
-        <p className="text-muted mt-3 max-w-2xl">
-          {total.toLocaleString()} moments from your leagues, told from your side
-          of them.
-        </p>
-      </header>
+    <PageContainer className="py-6">
+      <PageHeader
+        label="The archive"
+        title={league ? `${league.name} memories` : "Memories"}
+        description={`${total.toLocaleString()} moments, told from your side of them.`}
+      />
 
-      {/* Filters are links so the feed stays server-rendered and shareable. */}
       <nav
         aria-label="Filter memories"
-        className="no-scrollbar -mx-4 mb-6 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0"
+        className="no-scrollbar border-line mb-6 flex gap-1 overflow-x-auto border-b pb-3"
       >
         {MEMORY_FILTERS.map((option) => {
           const isActive = option.value === filter;
+          const href =
+            option.value === "all"
+              ? league
+                ? `/memories?league=${league.slug}`
+                : "/memories"
+              : query({ filter: option.value, page: undefined });
           return (
             <Link
               key={option.value}
-              href={option.value === "all" ? "/memories" : `/memories?filter=${option.value}`}
+              href={href}
               aria-current={isActive ? "true" : undefined}
               className={cn(
-                "inline-flex h-9 shrink-0 items-center rounded-xl border px-3.5 text-sm font-semibold transition-colors",
+                "inline-flex h-7 shrink-0 items-center rounded-md px-2.5 text-xs font-medium transition-colors",
                 isActive
-                  ? "border-gold bg-gold text-inverse"
-                  : "border-line bg-surface-2 text-muted hover:border-line-strong hover:text-ink",
+                  ? "bg-surface-3 text-ink"
+                  : "text-muted hover:bg-surface-2 hover:text-ink",
               )}
             >
               {option.label}
@@ -78,44 +119,59 @@ export default async function MemoriesPage({
 
       {memories.length === 0 ? (
         <EmptyState
-          icon={Sparkles}
           title="Nothing here yet"
           description={
             filter === "mine"
               ? "None of these memories involve you — try another filter."
-              : "Once your leagues have history, this feed fills up fast."
+              : "Once your leagues have history, this archive fills up fast."
           }
         />
       ) : (
         <>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {memories.map((memory) => (
-              <MemoryCard key={memory.id} memory={memory} showLeague />
+          {feature ? (
+            <div className="border-line mb-8 border-b pb-8">
+              <FeaturedMemory memory={feature} label="Featured" />
+            </div>
+          ) : null}
+
+          <div className="space-y-8">
+            {[...byYear.entries()].map(([year, entries]) => (
+              <Section key={year}>
+                {/* Year as a running head, sticky so the reader keeps their place. */}
+                <div className="border-line bg-base sticky top-12 z-10 mb-1 border-t py-2">
+                  <h2 className="figure-num text-muted text-sm">{year}</h2>
+                </div>
+                <div>
+                  {entries.map((memory) => (
+                    <MemoryEntry key={memory.id} memory={memory} showLeague={!league} />
+                  ))}
+                </div>
+              </Section>
             ))}
           </div>
 
           {(page > 1 || hasMore) && (
             <nav
               aria-label="Pagination"
-              className="mt-8 flex items-center justify-between gap-3"
+              className="border-line mt-8 flex items-center justify-between gap-3 border-t pt-4"
             >
               {page > 1 ? (
                 <Link
-                  href={`/memories?filter=${filter}&page=${page - 1}`}
-                  className="border-line hover:bg-surface-2 rounded-xl border px-4 py-2 text-sm font-medium"
+                  href={query({ page: page - 1 })}
+                  className="text-muted hover:text-ink text-sm"
                 >
-                  Previous
+                  ← Newer
                 </Link>
               ) : (
                 <span />
               )}
-              <span className="text-subtle text-sm">Page {page}</span>
+              <span className="text-faint text-xs">Page {page}</span>
               {hasMore ? (
                 <Link
-                  href={`/memories?filter=${filter}&page=${page + 1}`}
-                  className="border-line hover:bg-surface-2 rounded-xl border px-4 py-2 text-sm font-medium"
+                  href={query({ page: page + 1 })}
+                  className="text-muted hover:text-ink text-sm"
                 >
-                  Next
+                  Older →
                 </Link>
               ) : (
                 <span />
@@ -124,6 +180,7 @@ export default async function MemoriesPage({
           )}
         </>
       )}
+      <SectionHeader className="sr-only" label="End of feed" />
     </PageContainer>
   );
 }

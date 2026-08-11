@@ -23,20 +23,20 @@ export default async function AdminSettingsPage() {
       title="System"
       description="Environment health. Secret values are never displayed — only whether they are set."
     >
-      <Card variant="flat" className="divide-line divide-y">
+      <Card variant="bordered" className="divide-line divide-y">
         {CHECKS.map((check) => {
           const isSet = Boolean(process.env[check.key]);
           return (
             <div key={check.key} className="flex items-center gap-3 p-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">{check.label}</p>
-                <p className="text-subtle text-xs">
+                <p className="text-faint text-xs">
                   <code>{check.key}</code>
                 </p>
               </div>
               <Badge
                 size="xs"
-                tone={isSet ? "field" : check.optional ? "neutral" : "ember"}
+                tone={isSet ? "win" : check.optional ? "neutral" : "loss"}
               >
                 {isSet ? "Set" : check.optional ? "Not configured" : "Missing"}
               </Badge>
@@ -45,8 +45,8 @@ export default async function AdminSettingsPage() {
         })}
       </Card>
 
-      <Card variant="flat" className="mt-4 p-5">
-        <p className="font-bold">Email delivery</p>
+      <Card variant="bordered" className="mt-4 p-5">
+        <p className="text-sm font-semibold">Email delivery</p>
         <p className="text-muted mt-1.5 text-sm leading-relaxed">
           No mail transport is configured. Password reset generates a valid token
           and, in development, shows the link on screen instead of emailing it.

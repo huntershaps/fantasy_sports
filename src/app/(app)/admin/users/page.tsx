@@ -30,7 +30,7 @@ export default async function AdminUsersPage() {
         <Link href="/admin" className="text-muted hover:text-ink text-sm">
           ← Admin
         </Link>
-        <h1 className="mt-3 text-4xl font-extrabold sm:text-5xl">Users</h1>
+        <h1 className="mt-3 text-2xl font-semibold">Users</h1>
         <p className="text-muted mt-3">
           {users.length} accounts. Roles and access take effect on the next request.
         </p>
@@ -38,7 +38,7 @@ export default async function AdminUsersPage() {
 
       <div className="space-y-3">
         {users.map((user) => (
-          <Card key={user.id} variant="flat" className="p-4">
+          <Card key={user.id} variant="bordered" className="p-4">
             <div className="flex flex-wrap items-center gap-4">
               <Avatar name={user.name} src={user.image} size="md" />
 
@@ -48,18 +48,18 @@ export default async function AdminUsersPage() {
                     {user.name}
                   </Link>
                   {user.id === actor.id ? (
-                    <Badge tone="gold" size="xs">
+                    <Badge tone="brand" size="xs">
                       You
                     </Badge>
                   ) : null}
                   {user.isDisabled ? (
-                    <Badge tone="ember" size="xs">
+                    <Badge tone="loss" size="xs">
                       Disabled
                     </Badge>
                   ) : null}
                 </p>
-                <p className="text-subtle truncate text-xs">{user.email}</p>
-                <p className="text-subtle mt-1 truncate text-xs">
+                <p className="text-faint truncate text-xs">{user.email}</p>
+                <p className="text-faint mt-1 truncate text-xs">
                   {user._count.teamMemberships} teams ·{" "}
                   {user.leagueMemberships.map((m) => m.league.name).join(", ") ||
                     "no leagues"}

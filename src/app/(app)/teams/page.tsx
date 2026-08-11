@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Trophy, Users } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
-import { Badge } from "@/components/ui/badge";
-import { Card, SectionHeader } from "@/components/ui/card";
+import { PageHeader, Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireViewContext } from "@/lib/session";
 import { getManagerTeams } from "@/lib/queries/career";
@@ -15,7 +14,6 @@ export default async function TeamsPage() {
   const { viewer } = await requireViewContext();
   const teams = await getManagerTeams(viewer.id);
 
-  // Grouped by league so the same franchise's name changes read as a story.
   const byLeague = new Map<string, typeof teams>();
   for (const team of teams) {
     const list = byLeague.get(team.league.id) ?? [];
@@ -24,83 +22,72 @@ export default async function TeamsPage() {
   }
 
   return (
-    <PageContainer className="py-8 sm:py-10">
-      <header className="mb-8">
-        <p className="eyebrow mb-2">Your history</p>
-        <h1 className="text-4xl font-extrabold sm:text-5xl">My Teams</h1>
-        <p className="text-muted mt-3 max-w-2xl">
-          Every team you have ever fielded, whatever you called it that year.
-        </p>
-      </header>
+    <PageContainer className="py-6">
+      <PageHeader
+        label="Your history"
+        title="My Teams"
+        description="Every team you have fielded, whatever you called it that year."
+      />
 
       {teams.length === 0 ? (
         <EmptyState
-          icon={Users}
           title="No teams linked yet"
           description="A commissioner needs to connect your account to the teams you managed."
         />
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-8">
           {[...byLeague.values()].map((leagueTeams) => (
-            <section key={leagueTeams[0].league.id}>
+            <Section key={leagueTeams[0].league.id}>
               <SectionHeader
-                eyebrow={`${leagueTeams.length} seasons`}
-                title={leagueTeams[0].league.name}
+                label={leagueTeams[0].league.name}
+                action={
+                  <span className="text-faint text-xs">
+                    {leagueTeams.length} seasons
+                  </span>
+                }
               />
-              <ol className="border-line relative space-y-3 border-l pl-6">
+              <ul className="border-line divide-line divide-y border-t">
                 {leagueTeams.map((team) => (
-                  <li key={team.id} className="relative">
-                    <span
-                      className={cn(
-                        "ring-surface absolute top-5 -left-[31px] size-2.5 rounded-full ring-4",
-                        team.isChampion
-                          ? "bg-gold"
-                          : team.isCurrent
-                            ? "bg-ice"
-                            : "bg-line-strong",
-                      )}
-                    />
-                    <Link href={`/league/${team.league.slug}?season=${team.year}`}>
-                      <Card
-                        variant="flat"
-                        className={cn(
-                          "p-4 transition-colors hover:border-line-strong",
-                          team.isChampion && "border-gold/40",
-                        )}
-                      >
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="stat-figure text-gold w-14 shrink-0 text-2xl">
-                            {team.year}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="flex items-center gap-2 truncate font-bold">
-                              {team.name}
-                              {team.isChampion ? (
-                                <Trophy className="text-gold size-4 shrink-0" />
-                              ) : null}
-                            </p>
-                            <p className="text-subtle text-xs">
-                              {formatRecord(team.wins, team.losses, team.ties)} ·{" "}
-                              {formatPoints(team.pointsFor)} PF
-                              {team.finalRank ? ` · finished ${ordinal(team.finalRank)}` : ""}
-                            </p>
-                          </div>
-                          {team.isCurrent ? (
-                            <Badge tone="ice" size="xs">
-                              Active
-                            </Badge>
-                          ) : team.madePlayoffs ? (
-                            <Badge tone="field" size="xs">
-                              Playoffs
-                            </Badge>
-                          ) : null}
-                        </div>
-                      </Card>
+                  <li key={team.id}>
+                    <Link
+                      href={`/league/${team.league.slug}?season=${team.year}`}
+                      className="group hover:bg-surface -mx-3 flex flex-wrap items-baseline gap-x-5 gap-y-1 px-3 py-3 transition-colors"
+                    >
+                      <span className="figure-num tnum text-muted w-12 shrink-0 text-base">
+                        {team.year}
+                      </span>
+
+                      <span className="flex min-w-[12rem] flex-1 items-baseline gap-2">
+                        <span
+                          className={cn(
+                            "group-hover:text-brand text-sm font-medium transition-colors",
+                            team.isChampion && "text-ink",
+                          )}
+                        >
+                          {team.name}
+                        </span>
+                        {team.isChampion ? (
+                          <Trophy className="text-brand size-3 shrink-0 self-center" />
+                        ) : null}
+                        {team.isCurrent ? (
+                          <span className="text-faint text-xs">· active</span>
+                        ) : null}
+                      </span>
+
+                      <span className="tnum shrink-0 text-sm font-medium">
+                        {formatRecord(team.wins, team.losses, team.ties)}
+                      </span>
+                      <span className="tnum text-muted w-20 shrink-0 text-right text-sm">
+                        {formatPoints(team.pointsFor)}
+                      </span>
+                      <span className="text-faint w-12 shrink-0 text-right text-xs">
+                        {team.finalRank ? ordinal(team.finalRank) : "—"}
+                      </span>
                     </Link>
                   </li>
                 ))}
-              </ol>
-            </section>
+              </ul>
+            </Section>
           ))}
         </div>
       )}

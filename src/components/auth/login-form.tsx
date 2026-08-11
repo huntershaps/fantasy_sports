@@ -18,7 +18,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-5">
       <div>
-        <h1 className="text-3xl font-extrabold">Welcome back</h1>
+        <h1 className="text-xl font-semibold">Welcome back</h1>
         <p className="text-muted mt-2 text-sm">
           Sign in to see your teams, your trophies, and your regrets.
         </p>
@@ -29,7 +29,7 @@ export function LoginForm() {
       {state.error ? (
         <div
           role="alert"
-          className="border-ember/30 bg-ember-wash text-ember flex items-start gap-2.5 rounded-xl border p-3 text-sm"
+          className="border-loss/30 bg-loss/15 text-loss flex items-start gap-2.5 rounded-xl border p-3 text-sm"
         >
           <AlertCircle className="mt-0.5 size-4 shrink-0" />
           {state.error}
@@ -69,7 +69,7 @@ export function LoginForm() {
         <Link href="/forgot-password" className="text-muted hover:text-ink">
           Forgot password?
         </Link>
-        <Link href="/register" className="text-gold font-medium hover:underline">
+        <Link href="/register" className="text-brand font-medium hover:underline">
           Create account
         </Link>
       </div>

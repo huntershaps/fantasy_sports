@@ -77,9 +77,18 @@ const CARD_INCLUDE = {
 export async function listMemories(
   user: SessionUser,
   viewerId: string,
-  options: { filter?: MemoryFilter; leagueId?: string; take?: number; skip?: number } = {},
+  options: {
+    filter?: MemoryFilter;
+    leagueId?: string;
+    take?: number;
+    skip?: number;
+    /** "notable" surfaces the dramatic stuff first — right for a dashboard
+     *  digest. "chronological" is right for the archive, where jumbled dates
+     *  would stop it reading as a chronicle. */
+    order?: "notable" | "chronological";
+  } = {},
 ) {
-  const { filter = "all", leagueId, take = 30, skip = 0 } = options;
+  const { filter = "all", leagueId, take = 30, skip = 0, order = "notable" } = options;
 
   const where: Prisma.MemoryWhereInput = {
     ...(await scopeFilter(user, leagueId)),
@@ -94,7 +103,10 @@ export async function listMemories(
 
   const memories = await db.memory.findMany({
     where,
-    orderBy: [{ importance: "desc" }, { occurredOn: "desc" }],
+    orderBy:
+      order === "chronological"
+        ? [{ occurredOn: "desc" }, { importance: "desc" }]
+        : [{ importance: "desc" }, { occurredOn: "desc" }],
     take,
     skip,
     include: CARD_INCLUDE,

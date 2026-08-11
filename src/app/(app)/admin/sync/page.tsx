@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { AlertTriangle, CheckCircle2, PlugZap } from "lucide-react";
 import { AdminShell } from "@/components/admin/admin-page";
 import { Badge } from "@/components/ui/badge";
-import { Card, SectionHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { requireRole } from "@/lib/session";
@@ -47,7 +48,7 @@ export default async function AdminSyncPage() {
       description="Pulls league data from the platform it actually lives on, normalizes it, and re-runs the event engine."
       wide
     >
-      <SectionHeader eyebrow="Status" title="Last sync" />
+      <SectionHeader label="Status" title="Last sync" />
       <StatGrid columns={4} className="mb-10">
         <Stat
           label="Status"
@@ -55,9 +56,9 @@ export default async function AdminSyncPage() {
           size="sm"
           tone={
             latest?.status === "SUCCESS"
-              ? "field"
+              ? "win"
               : latest?.status === "FAILED"
-                ? "ember"
+                ? "loss"
                 : "muted"
           }
           sub={latest ? dateTimeFormat.format(latest.startedAt) : undefined}
@@ -68,31 +69,31 @@ export default async function AdminSyncPage() {
           label="Errors"
           value={latest?._count.errors ?? 0}
           size="sm"
-          tone={(latest?._count.errors ?? 0) > 0 ? "ember" : "muted"}
+          tone={(latest?._count.errors ?? 0) > 0 ? "loss" : "muted"}
         />
       </StatGrid>
 
-      <SectionHeader eyebrow="Connections" title="Providers" />
+      <SectionHeader label="Connections" title="Providers" />
       <div className="mb-10 space-y-3">
         {leagues.map((league) => (
-          <Card key={league.id} variant="flat" className="p-4">
+          <Card key={league.id} variant="bordered" className="p-4">
             <div className="flex flex-wrap items-center gap-3">
               <span className="bg-surface-2 grid size-10 shrink-0 place-items-center rounded-xl">
                 {league.providerCredential ? (
-                  <CheckCircle2 className="text-field size-5" />
+                  <CheckCircle2 className="text-win size-5" />
                 ) : (
-                  <PlugZap className="text-subtle size-5" />
+                  <PlugZap className="text-faint size-5" />
                 )}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">{league.name}</p>
-                <p className="text-subtle text-xs">
+                <p className="text-faint text-xs">
                   {league.providerCredential
                     ? `${league.providerCredential.provider} connected`
                     : "No provider connected — data is local only"}
                 </p>
               </div>
-              <Badge size="xs" tone={league.providerCredential ? "field" : "neutral"}>
+              <Badge size="xs" tone={league.providerCredential ? "win" : "neutral"}>
                 {league.provider}
               </Badge>
             </div>
@@ -100,35 +101,35 @@ export default async function AdminSyncPage() {
         ))}
       </div>
 
-      <SectionHeader eyebrow="Setup" title="What each provider needs" />
+      <SectionHeader label="Setup" title="What each provider needs" />
       <div className="mb-10 grid gap-3 sm:grid-cols-2">
-        <Card variant="flat" className="p-5">
-          <p className="font-bold">ESPN Fantasy</p>
+        <Card variant="bordered" className="p-5">
+          <p className="text-sm font-semibold">ESPN Fantasy</p>
           <p className="text-muted mt-2 text-sm leading-relaxed">
             Public leagues need only the league ID. Private leagues and prior
             seasons additionally require the <code>SWID</code> and{" "}
             <code>espn_s2</code> cookies from a signed-in browser session.
           </p>
-          <p className="text-subtle mt-3 text-xs">
+          <p className="text-faint mt-3 text-xs">
             Cookies must be supplied by the league owner. They are stored
             encrypted and never sent to the browser.
           </p>
         </Card>
-        <Card variant="flat" className="p-5">
-          <p className="font-bold">Yahoo Fantasy</p>
+        <Card variant="bordered" className="p-5">
+          <p className="text-sm font-semibold">Yahoo Fantasy</p>
           <p className="text-muted mt-2 text-sm leading-relaxed">
             Requires an app registered at developer.yahoo.com, then a one-time
             OAuth2 authorization. League keys take the form{" "}
             <code>{"{game_id}.l.{league_id}"}</code>, so the NFL game id has to
             be resolved per season.
           </p>
-          <p className="text-subtle mt-3 text-xs">
+          <p className="text-faint mt-3 text-xs">
             OAuth applies to every read, including public leagues.
           </p>
         </Card>
       </div>
 
-      <SectionHeader eyebrow="History" title="Sync log" />
+      <SectionHeader label="History" title="Sync log" />
       {syncs.length === 0 ? (
         <EmptyState
           icon={AlertTriangle}
@@ -138,15 +139,15 @@ export default async function AdminSyncPage() {
       ) : (
         <div className="space-y-2">
           {syncs.map((sync) => (
-            <Card key={sync.id} variant="flat" className="p-4">
+            <Card key={sync.id} variant="bordered" className="p-4">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge
                   size="xs"
                   tone={
                     sync.status === "SUCCESS"
-                      ? "field"
+                      ? "win"
                       : sync.status === "FAILED"
-                        ? "ember"
+                        ? "loss"
                         : "neutral"
                   }
                 >
@@ -156,12 +157,12 @@ export default async function AdminSyncPage() {
                   <p className="truncate text-sm font-semibold">
                     {sync.league.name} · {sync.provider} · {sync.mode}
                   </p>
-                  <p className="text-subtle text-xs">
+                  <p className="text-faint text-xs">
                     {dateTimeFormat.format(sync.startedAt)}
                     {sync.triggeredBy ? ` · by ${sync.triggeredBy.name}` : ""}
                   </p>
                 </div>
-                <p className="text-subtle shrink-0 text-xs">
+                <p className="text-faint shrink-0 text-xs">
                   +{sync.recordsCreated} / ~{sync.recordsUpdated}
                   {sync._count.errors > 0 ? ` · ${sync._count.errors} errors` : ""}
                 </p>

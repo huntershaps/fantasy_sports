@@ -30,9 +30,9 @@ export default async function AdminRecordsPage() {
     >
       <div className="space-y-2">
         {records.map((record) => (
-          <Card key={record.id} variant="flat" className="p-4">
+          <Card key={record.id} variant="bordered" className="p-4">
             <div className="flex flex-wrap items-center gap-4">
-              <span className="stat-figure text-gold w-28 shrink-0 text-xl">
+              <span className="figure-num text-brand w-28 shrink-0 text-xl">
                 {record.displayValue}
               </span>
               <div className="min-w-0 flex-1">
@@ -41,14 +41,14 @@ export default async function AdminRecordsPage() {
                   <Badge size="xs">{record.category}</Badge>
                   <Badge size="xs">{record.league.name}</Badge>
                   {record.verifiedAt ? (
-                    <Badge tone="field" size="xs">
+                    <Badge tone="win" size="xs">
                       Verified
                     </Badge>
                   ) : null}
                 </p>
-                <p className="text-subtle truncate text-xs">{record.description}</p>
+                <p className="text-faint truncate text-xs">{record.description}</p>
                 {record.previous ? (
-                  <p className="text-subtle text-xs">
+                  <p className="text-faint text-xs">
                     Previous: {record.previous.displayValue}
                   </p>
                 ) : null}
@@ -61,7 +61,7 @@ export default async function AdminRecordsPage() {
                   </Button>
                 </form>
               ) : (
-                <span className="text-subtle text-xs">
+                <span className="text-faint text-xs">
                   by {record.verifiedBy?.name}
                 </span>
               )}

@@ -11,7 +11,7 @@ export default function SignOutPage() {
     <div className="grid min-h-dvh place-items-center px-6">
       <div className="w-full max-w-sm text-center">
         <Wordmark className="mb-8 justify-center" />
-        <h1 className="text-2xl font-extrabold">Sign out?</h1>
+        <h1 className="text-xl font-semibold">Sign out?</h1>
         <p className="text-muted mt-2 text-sm">
           The archive will still be here.
         </p>

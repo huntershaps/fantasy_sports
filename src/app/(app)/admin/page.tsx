@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
 import { Badge } from "@/components/ui/badge";
-import { Card, SectionHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/layout";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { requireRole } from "@/lib/session";
 import { db } from "@/lib/db";
@@ -47,19 +48,19 @@ export default async function AdminPage() {
     <PageContainer className="py-8 sm:py-10">
       <header className="mb-8">
         <div className="mb-2 flex items-center gap-2">
-          <p className="eyebrow">Control room</p>
-          <Badge tone="violet" size="xs">
+          <p className="label">Control room</p>
+          <Badge tone="neutral" size="xs">
             {actor.role === "SUPER_ADMIN" ? "Super Admin" : "Admin"}
           </Badge>
         </div>
-        <h1 className="text-4xl font-extrabold sm:text-5xl">Admin</h1>
+        <h1 className="text-2xl font-semibold">Admin</h1>
         <p className="text-muted mt-3 max-w-2xl">
           Everything in the archive, editable. Derived data can always be rebuilt
           from raw games without losing manual corrections.
         </p>
       </header>
 
-      <SectionHeader eyebrow="At a glance" title="The archive" />
+      <SectionHeader label="At a glance" title="The archive" />
       <StatGrid columns={4} className="mb-4">
         <Stat label="Users" value={users} size="sm" />
         <Stat label="Leagues" value={leagues} size="sm" />
@@ -67,30 +68,30 @@ export default async function AdminPage() {
         <Stat label="Matchups" value={matchups.toLocaleString()} size="sm" />
       </StatGrid>
       <StatGrid columns={4} className="mb-10">
-        <Stat label="Memories" value={memories.toLocaleString()} size="sm" tone="gold" />
-        <Stat label="Awards" value={awards.toLocaleString()} size="sm" tone="gold" />
-        <Stat label="Current records" value={records} size="sm" tone="gold" />
+        <Stat label="Memories" value={memories.toLocaleString()} size="sm" tone="brand" />
+        <Stat label="Awards" value={awards.toLocaleString()} size="sm" tone="brand" />
+        <Stat label="Current records" value={records} size="sm" tone="brand" />
         <Stat
           label="Last sync"
           value={lastSync ? lastSync.status : "Never"}
           size="sm"
-          tone={lastSync?.status === "SUCCESS" ? "field" : "muted"}
+          tone={lastSync?.status === "SUCCESS" ? "win" : "muted"}
           sub={lastSync ? lastSync.startedAt.toLocaleDateString() : "No provider connected"}
         />
       </StatGrid>
 
-      <SectionHeader eyebrow="Tools" title="Manage" />
+      <SectionHeader label="Tools" title="Manage" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {TOOLS.map((tool) => (
           <Link key={tool.href} href={tool.href}>
             <Card
-              variant="raised"
+              variant="bordered"
               className="h-full p-5 transition-colors hover:border-line-strong"
             >
               <span className="bg-surface-2 mb-4 grid size-10 place-items-center rounded-xl">
-                <tool.icon className="text-gold size-5" />
+                <tool.icon className="text-brand size-5" />
               </span>
-              <p className="font-bold">{tool.label}</p>
+              <p className="text-sm font-semibold">{tool.label}</p>
               <p className="text-muted mt-1.5 text-sm leading-relaxed">{tool.blurb}</p>
             </Card>
           </Link>

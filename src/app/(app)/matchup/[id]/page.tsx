@@ -3,10 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
-import { Badge } from "@/components/ui/badge";
-import { Card, SectionHeader } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
-import { Stat, StatGrid } from "@/components/ui/stat";
+import { Section, SectionHeader } from "@/components/ui/layout";
 import { db } from "@/lib/db";
 import { assertLeagueAccess, requireViewContext } from "@/lib/session";
 import { cn, formatPoints } from "@/lib/utils";
@@ -26,21 +23,29 @@ export default async function MatchupPage({
   const matchup = await db.matchup.findUnique({
     where: { id },
     include: {
-      season: { select: { year: true, leagueId: true, league: { select: { name: true, slug: true, accentColor: true } } } },
+      season: {
+        select: {
+          year: true,
+          leagueId: true,
+          league: { select: { name: true, slug: true, accentColor: true } },
+        },
+      },
       homeTeam: {
         select: {
           id: true,
           name: true,
-          logoUrl: true,
-          memberships: { include: { user: { select: { id: true, name: true, image: true } } } },
+          wins: true,
+          losses: true,
+          memberships: { include: { user: { select: { id: true, name: true } } } },
         },
       },
       awayTeam: {
         select: {
           id: true,
           name: true,
-          logoUrl: true,
-          memberships: { include: { user: { select: { id: true, name: true, image: true } } } },
+          wins: true,
+          losses: true,
+          memberships: { include: { user: { select: { id: true, name: true } } } },
         },
       },
       players: {
@@ -69,179 +74,181 @@ export default async function MatchupPage({
         return order !== 0 ? order : Number(b.points) - Number(a.points);
       });
 
-  const allStarters = matchup.players.filter((p) => p.isStarter);
-  const topPerformer = [...allStarters].sort((a, b) => Number(b.points) - Number(a.points))[0];
-  const worstPerformer = [...allStarters].sort((a, b) => Number(a.points) - Number(b.points))[0];
+  const starters = matchup.players.filter((p) => p.isStarter);
+  const top = [...starters].sort((a, b) => Number(b.points) - Number(a.points))[0];
+  const bottom = [...starters].sort((a, b) => Number(a.points) - Number(b.points))[0];
 
   const benchPoints = (teamId: string) =>
     matchup.players
       .filter((p) => p.fantasyTeamId === teamId && !p.isStarter)
       .reduce((sum, p) => sum + Number(p.points), 0);
 
+  const roundLabel =
+    matchup.type === "REGULAR" ? null : matchup.type.replace(/_/g, " ").toLowerCase();
+
   return (
-    <PageContainer className="py-8 sm:py-10">
+    <PageContainer className="py-6">
       <Link
         href={`/league/${matchup.season.league.slug}?season=${matchup.season.year}`}
-        className="text-muted hover:text-ink mb-6 inline-flex items-center gap-1.5 text-sm font-medium"
+        className="text-muted hover:text-ink mb-5 inline-flex items-center gap-1.5 text-xs"
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeft className="size-3.5" />
         {matchup.season.league.name} · {matchup.season.year}
       </Link>
 
-      {/* Scoreboard */}
-      <Card variant="raised" className="mb-8 overflow-hidden">
-        <div className="border-line flex items-center justify-between border-b px-5 py-3">
-          <span className="eyebrow">Week {matchup.week}</span>
-          {matchup.type !== "REGULAR" ? (
-            <Badge tone={matchup.type === "CHAMPIONSHIP" ? "gold" : "neutral"} size="xs">
-              {matchup.type.replace(/_/g, " ")}
-            </Badge>
+      {/* Scoreline. The winner is carried by weight and a rule, not a badge. */}
+      <div className="border-line border-y py-5">
+        <div className="text-faint mb-4 flex items-baseline gap-2 text-xs">
+          <span className="label">Week {matchup.week}</span>
+          {roundLabel ? (
+            <span className="text-brand capitalize">{roundLabel}</span>
           ) : null}
+          {!matchup.isComplete ? <span>· Not yet played</span> : null}
         </div>
 
-        <div className="grid items-center gap-2 p-6 sm:grid-cols-[1fr_auto_1fr] sm:p-8">
-          {sides.map((side, index) => (
-            <div
-              key={side.team.id}
-              className={cn(
-                "flex items-center gap-4",
-                index === 1 && "sm:flex-row-reverse sm:text-right",
-              )}
-            >
-              <Avatar
-                name={side.team.name}
-                src={side.team.logoUrl}
-                size="xl"
-                rounded="card"
-                className={cn(!side.isWinner && matchup.isComplete && "opacity-60")}
+        <div className="space-y-3">
+          {sides.map((side) => (
+            <div key={side.team.id} className="flex items-center gap-4">
+              <span
+                aria-hidden
+                className={cn(
+                  "h-8 w-1 shrink-0 rounded-full",
+                  matchup.isComplete && side.isWinner ? "bg-brand" : "bg-line",
+                )}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xl font-extrabold sm:text-2xl">
+                <p
+                  className={cn(
+                    "truncate text-lg font-semibold",
+                    matchup.isComplete && !side.isWinner && "text-muted",
+                  )}
+                >
                   {side.team.name}
                 </p>
                 {side.team.memberships[0] ? (
                   <Link
                     href={`/profile/${side.team.memberships[0].user.id}`}
-                    className="text-muted hover:text-ink truncate text-sm"
+                    className="text-faint hover:text-muted text-xs"
                   >
                     {side.team.memberships[0].user.name}
                   </Link>
                 ) : null}
-                <p
-                  className={cn(
-                    "stat-figure mt-2 text-4xl sm:text-5xl",
-                    side.isWinner ? "text-gold" : "text-muted",
-                  )}
-                >
-                  {formatPoints(side.score)}
-                </p>
-                {matchup.isComplete ? (
-                  <Badge
-                    tone={side.isWinner ? "field" : matchup.isTie ? "neutral" : "ember"}
-                    size="xs"
-                    className="mt-2"
-                  >
-                    {matchup.isTie ? "TIE" : side.isWinner ? "WIN" : "LOSS"}
-                  </Badge>
-                ) : null}
               </div>
+              <span
+                className={cn(
+                  "figure-num tnum shrink-0 text-3xl",
+                  matchup.isComplete && side.isWinner ? "text-ink" : "text-muted",
+                )}
+              >
+                {matchup.isComplete ? formatPoints(side.score) : "—"}
+              </span>
             </div>
           ))}
-
-          <div className="hidden px-6 sm:block">
-            <span className="eyebrow">VS</span>
-          </div>
         </div>
-      </Card>
+      </div>
 
       {matchup.isComplete ? (
         <>
-          <StatGrid columns={4} className="mb-10">
-            <Stat
-              label="Margin"
-              value={formatPoints(Math.abs(homeScore - awayScore))}
-              size="sm"
+          <dl className="border-line grid grid-cols-2 gap-x-8 gap-y-4 border-b py-4 sm:grid-cols-4">
+            <Figure label="Margin" value={formatPoints(Math.abs(homeScore - awayScore))} />
+            <Figure label="Combined" value={formatPoints(homeScore + awayScore)} />
+            <Figure
+              label="Top starter"
+              value={top ? formatPoints(Number(top.points)) : "—"}
+              sub={top?.player.fullName}
             />
-            <Stat
-              label="Combined"
-              value={formatPoints(homeScore + awayScore)}
-              size="sm"
-            />
-            <Stat
-              label="Top performer"
-              value={topPerformer ? formatPoints(Number(topPerformer.points)) : "—"}
-              sub={topPerformer?.player.fullName}
-              size="sm"
-              tone="field"
-            />
-            <Stat
+            <Figure
               label="Worst starter"
-              value={worstPerformer ? formatPoints(Number(worstPerformer.points)) : "—"}
-              sub={worstPerformer?.player.fullName}
-              size="sm"
-              tone="ember"
+              value={bottom ? formatPoints(Number(bottom.points)) : "—"}
+              sub={bottom?.player.fullName}
             />
-          </StatGrid>
+          </dl>
 
-          <SectionHeader eyebrow="Box score" title="Lineups" />
-          <div className="grid gap-4 lg:grid-cols-2">
-            {sides.map((side) => (
-              <Card key={side.team.id} variant="flat" className="overflow-hidden">
-                <div className="border-line flex items-center justify-between border-b px-4 py-3">
-                  <p className="truncate font-bold">{side.team.name}</p>
-                  <p className="text-subtle text-xs">
-                    Bench: {formatPoints(benchPoints(side.team.id))}
-                  </p>
+          <Section className="mt-8">
+            <SectionHeader label="Box score" rule={false} />
+            <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
+              {sides.map((side) => (
+                <div key={side.team.id}>
+                  <div className="border-line mb-1 flex items-baseline justify-between gap-3 border-b pb-2">
+                    <p className="truncate text-sm font-semibold">{side.team.name}</p>
+                    <p className="text-faint tnum shrink-0 text-xs">
+                      Bench {formatPoints(benchPoints(side.team.id))}
+                    </p>
+                  </div>
+                  <table className="w-full">
+                    <tbody>
+                      {slotsFor(side.team.id).map((slot, index, all) => {
+                        const isFirstBench =
+                          !slot.isStarter && (index === 0 || all[index - 1].isStarter);
+                        return (
+                          <tr
+                            key={slot.id}
+                            className={cn(
+                              "hover:bg-surface transition-colors",
+                              isFirstBench && "border-line border-t",
+                            )}
+                          >
+                            <td
+                              className={cn(
+                                "w-12 py-1.5 text-2xs font-semibold",
+                                slot.isStarter ? "text-brand" : "text-faint",
+                              )}
+                            >
+                              {slot.slot}
+                            </td>
+                            <td className="py-1.5">
+                              <span
+                                className={cn(
+                                  "text-sm",
+                                  slot.isStarter ? "text-ink" : "text-muted",
+                                )}
+                              >
+                                {slot.player.fullName}
+                              </span>
+                              <span className="text-faint ml-1.5 text-xs">
+                                {slot.player.nflTeam}
+                              </span>
+                            </td>
+                            <td
+                              className={cn(
+                                "tnum w-14 py-1.5 text-right text-sm",
+                                slot.isStarter ? "text-ink font-medium" : "text-faint",
+                              )}
+                            >
+                              {formatPoints(Number(slot.points))}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-                <ul className="divide-line divide-y">
-                  {slotsFor(side.team.id).map((slot) => (
-                    <li
-                      key={slot.id}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-2.5",
-                        !slot.isStarter && "bg-surface-2/50",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "w-12 shrink-0 text-[11px] font-bold tracking-wide",
-                          slot.isStarter ? "text-gold" : "text-subtle",
-                        )}
-                      >
-                        {slot.slot}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {slot.player.fullName}
-                        </p>
-                        <p className="text-subtle text-xs">
-                          {slot.player.position}
-                          {slot.player.nflTeam ? ` · ${slot.player.nflTeam}` : ""}
-                        </p>
-                      </div>
-                      <span
-                        className={cn(
-                          "shrink-0 text-sm font-semibold tabular",
-                          slot.isStarter ? "text-ink" : "text-subtle",
-                        )}
-                      >
-                        {formatPoints(Number(slot.points))}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Section>
         </>
       ) : (
-        <Card variant="flat" className="p-8 text-center">
-          <p className="text-muted">
-            This matchup has not been played yet.
-          </p>
-        </Card>
+        <p className="text-muted py-8 text-sm">This matchup has not been played yet.</p>
       )}
     </PageContainer>
+  );
+}
+
+function Figure({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <dt className="label mb-0.5">{label}</dt>
+      <dd className="figure-num tnum text-lg">{value}</dd>
+      {sub ? <p className="text-faint mt-0.5 truncate text-xs">{sub}</p> : null}
+    </div>
   );
 }
 
