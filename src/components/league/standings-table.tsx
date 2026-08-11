@@ -55,7 +55,7 @@ export function StandingsTable({
                   index === playoffCutoff - 1 && "border-b-line-strong",
                 )}
               >
-                <td className="text-faint tnum py-2.5">{row.rank ?? index + 1}</td>
+                <td className="text-faint tnum py-2.5">{row.rank || index + 1}</td>
                 <td className="py-2.5">
                   <div className="flex items-baseline gap-2">
                     <span className="text-ink truncate font-medium">{row.name}</span>
@@ -97,7 +97,7 @@ export function StandingsTable({
       <ul className="border-line divide-line divide-y border-t sm:hidden">
         {rows.map((row, index) => {
           const isMine = highlightUserId && row.manager?.id === highlightUserId;
-          const rank = row.rank ?? index + 1;
+          const rank = row.rank || index + 1;
           return (
             <li
               key={row.id}

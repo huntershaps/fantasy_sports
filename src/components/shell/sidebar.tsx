@@ -29,6 +29,7 @@ export function Sidebar({
   const sections = navigationFor(user.role);
   const main = sections[0];
   const admin = sections.find((s) => s.label === "Admin");
+  const inAdmin = pathname.startsWith("/admin");
 
   return (
     <aside className="border-line bg-surface fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r lg:flex">
@@ -93,26 +94,30 @@ export function Sidebar({
         </div>
       </nav>
 
+      {/* Admin collapses to a single entry until you are actually in it, then
+          expands — otherwise its sub-pages are two clicks deep and invisible. */}
       {admin ? (
         <div className="px-3 pb-2">
-          <Link
-            href="/admin"
-            aria-current={pathname.startsWith("/admin") ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-              pathname.startsWith("/admin")
-                ? "bg-surface-2 text-ink font-medium"
-                : "text-muted hover:bg-surface-2/70 hover:text-ink",
-            )}
-          >
-            <Shield
-              className={cn(
-                "size-4 shrink-0",
-                pathname.startsWith("/admin") ? "text-brand" : "text-faint",
-              )}
-            />
-            Admin
-          </Link>
+          {inAdmin ? (
+            <>
+              <p className="label px-3 pt-2 pb-2">Admin</p>
+              <ul className="space-y-0.5">
+                {admin.items.map((item) => (
+                  <li key={item.href}>
+                    <NavLink item={item} active={isActivePath(pathname, item)} />
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <Link
+              href="/admin"
+              className="text-muted hover:bg-surface-2/70 hover:text-ink flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors"
+            >
+              <Shield className="text-faint size-4 shrink-0" />
+              Admin
+            </Link>
+          )}
         </div>
       ) : null}
 

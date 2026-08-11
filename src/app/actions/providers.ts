@@ -81,6 +81,113 @@ export async function connectProvider(
   return { ok: true, message: "Connection saved." };
 }
 
+const importSchema = z.object({
+  providerLeagueId: z.string().trim().min(1, "Enter your ESPN league id"),
+  season: z.coerce.number().int().min(1990).max(2100),
+  swid: z.string().trim().optional(),
+  espnS2: z.string().trim().optional(),
+});
+
+/**
+ * Creates a brand new league from an ESPN league id and imports it.
+ *
+ * This exists because the alternative — attaching a real ESPN league to an
+ * existing placeholder league record — would graft real history onto the wrong
+ * archive. The league's name comes from ESPN so it matches what people
+ * actually call it.
+ */
+export async function importNewLeague(
+  _prev: ProviderActionState,
+  formData: FormData,
+): Promise<ProviderActionState> {
+  const actor = await requireApiRole("SUPER_ADMIN");
+
+  const parsed = importSchema.safeParse({
+    providerLeagueId: formData.get("providerLeagueId"),
+    season: formData.get("season"),
+    swid: formData.get("swid"),
+    espnS2: formData.get("espnS2"),
+  });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+
+  const { providerLeagueId, season } = parsed.data;
+  const credentials: ProviderCredentials = {
+    ...(parsed.data.swid ? { swid: parsed.data.swid } : {}),
+    ...(parsed.data.espnS2 ? { espnS2: parsed.data.espnS2 } : {}),
+  };
+
+  const provider = getProvider("ESPN");
+  if (!provider) return { ok: false, message: "ESPN provider unavailable." };
+
+  // Probe before creating anything, so a bad id or missing cookies does not
+  // leave an empty league behind.
+  const check = await provider.checkConnection({ providerLeagueId, credentials }, season);
+  if (!check.ok) return { ok: false, message: check.message };
+
+  const slug = slugifyLeague(check.leagueName ?? `espn-${providerLeagueId}`);
+  const existing = await db.league.findFirst({
+    where: {
+      OR: [{ slug }, { providerCredential: { providerLeagueId } }],
+    },
+    select: { id: true, name: true },
+  });
+  if (existing) {
+    return {
+      ok: false,
+      message: `“${existing.name}” already exists for that league. Use the connection form above to re-sync it.`,
+    };
+  }
+
+  const league = await db.league.create({
+    data: {
+      slug,
+      name: check.leagueName ?? `ESPN league ${providerLeagueId}`,
+      foundedYear: check.seasons?.length ? Math.min(...check.seasons) : season,
+      provider: "ESPN",
+      accentColor: "#2D8CFF",
+      secondColor: "#F59E0B",
+      providerCredential: {
+        create: {
+          provider: "ESPN",
+          providerLeagueId,
+          encryptedData: encryptJson(credentials),
+        },
+      },
+      // The person importing gets access immediately; everyone else is added
+      // when their team is claimed.
+      memberships: { create: { userId: actor.id, role: "COMMISSIONER" } },
+    },
+  });
+
+  const outcome = await runSync(db, {
+    leagueId: league.id,
+    seasons: check.seasons?.length ? check.seasons : [season],
+    mode: "FULL",
+    triggeredByUserId: actor.id,
+  });
+
+  revalidatePath("/", "layout");
+
+  return {
+    ok: outcome.status !== "FAILED",
+    message:
+      outcome.status === "FAILED"
+        ? `Created “${league.name}” but the import failed.`
+        : `Imported “${league.name}” — seasons ${outcome.seasonsImported.join(", ")}, ${outcome.created} rows created.`,
+    detail: outcome.errors.map((e) => `${e.entity}: ${e.message}`),
+  };
+}
+
+function slugifyLeague(value: string): string {
+  const base = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return base || "imported-league";
+}
+
 export async function clearProviderCredentials(formData: FormData) {
   await requireApiRole("SUPER_ADMIN");
   const leagueId = String(formData.get("leagueId"));

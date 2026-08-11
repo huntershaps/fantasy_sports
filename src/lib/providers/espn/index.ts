@@ -205,7 +205,9 @@ export const espnProvider: FantasyProvider = {
         ties: num(overall?.ties),
         pointsFor: round2(num(overall?.pointsFor)),
         pointsAgainst: round2(num(overall?.pointsAgainst)),
-        regularSeasonRank: team.playoffSeed ?? null,
+        // ESPN uses 0 for "no seed yet" rather than omitting the field, so it
+        // has to become null or the standings render everyone as rank 0.
+        regularSeasonRank: team.playoffSeed || null,
         finalRank: team.rankCalculatedFinal || null,
         ownerIds: owners.filter(Boolean),
       };

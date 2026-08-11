@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import {
   connectProvider,
+  importNewLeague,
   testProviderConnection,
   triggerSync,
   type ProviderActionState,
@@ -23,7 +24,85 @@ export type ProviderLeague = {
 };
 
 export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
-  const [selectedId, setSelectedId] = useState(leagues[0]?.id ?? "");
+  return (
+    <div className="space-y-4">
+      <ImportNewLeague />
+      {leagues.length > 0 ? <ManageExisting leagues={leagues} /> : null}
+    </div>
+  );
+}
+
+/** The first-run path: a real ESPN league that does not exist here yet.
+ *  Without this the only option would be attaching real history to a
+ *  placeholder league, which would graft it onto the wrong archive. */
+function ImportNewLeague() {
+  const [state, action] = useActionState(importNewLeague, {} as ProviderActionState);
+
+  return (
+    <Card variant="bordered" className="p-4">
+      <h3 className="text-sm font-semibold">Import a league from ESPN</h3>
+      <p className="text-muted mt-1 mb-4 text-xs leading-relaxed">
+        Creates a new league here from your ESPN league and imports every season
+        it can read. The name comes from ESPN. Use this for a league that is not
+        already in the list below.
+      </p>
+
+      <form action={action} className="space-y-3">
+        <Field
+          label="ESPN league ID"
+          htmlFor="new-league-id"
+          hint="The number after ?leagueId= in your ESPN league URL."
+        >
+          <Input
+            id="new-league-id"
+            name="providerLeagueId"
+            placeholder="1893127963"
+            required
+          />
+        </Field>
+
+        <Field
+          label="Season to check"
+          htmlFor="new-season"
+          hint="Used to locate the league. Every season it offers gets imported."
+        >
+          <Input
+            id="new-season"
+            name="season"
+            type="number"
+            defaultValue={new Date().getFullYear()}
+            required
+          />
+        </Field>
+
+        <Field
+          label="SWID cookie"
+          htmlFor="new-swid"
+          hint="Only needed if the league or its past seasons are private. Include the braces."
+        >
+          <Input
+            id="new-swid"
+            name="swid"
+            type="password"
+            placeholder="{AAAA-BBBB-…}"
+            autoComplete="off"
+          />
+        </Field>
+
+        <Field label="espn_s2 cookie" htmlFor="new-espn-s2">
+          <Input id="new-espn-s2" name="espnS2" type="password" autoComplete="off" />
+        </Field>
+
+        <Submit label="Import league" pendingLabel="Importing…" />
+        <Result state={state} />
+      </form>
+    </Card>
+  );
+}
+
+/** Re-connecting, testing and re-syncing a league that already exists here. */
+function ManageExisting({ leagues }: { leagues: ProviderLeague[] }) {
+  const [selectedId, setSelectedId] = useState(leagues[0].id);
   const league = leagues.find((l) => l.id === selectedId) ?? leagues[0];
 
   const [connectState, connectAction] = useActionState(
@@ -39,33 +118,30 @@ export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
     {} as ProviderActionState,
   );
 
-  if (!league) {
-    return <p className="text-muted text-sm">Create a league first.</p>;
-  }
-
   return (
-    <div className="space-y-4">
-      {leagues.length > 1 ? (
-        <Field label="League" htmlFor="league-select">
-          <Select
-            id="league-select"
-            value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
-          >
-            {leagues.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      ) : null}
-
+    <>
       <Card variant="bordered" className="p-4">
-        <h3 className="text-sm font-semibold">Connect {league.name}</h3>
-        <p className="text-muted mt-1 mb-4 text-xs leading-relaxed">
-          Cookies are encrypted before they are stored and are never sent back
-          to the browser. Leave them blank to keep whatever is already saved.
+        <h3 className="mb-3 text-sm font-semibold">Existing leagues</h3>
+
+        {leagues.length > 1 ? (
+          <Field label="League" htmlFor="league-select" className="mb-4">
+            <Select
+              id="league-select"
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+            >
+              {leagues.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : null}
+
+        <p className="text-muted mb-4 text-xs leading-relaxed">
+          Cookies are encrypted before storage and never sent back to the
+          browser. Leave them blank to keep whatever is already saved.
         </p>
 
         <form action={connectAction} className="space-y-3">
@@ -78,11 +154,7 @@ export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
             </Select>
           </Field>
 
-          <Field
-            label="League ID"
-            htmlFor="providerLeagueId"
-            hint="The number after ?leagueId= in your ESPN league URL."
-          >
+          <Field label="League ID" htmlFor="providerLeagueId">
             <Input
               id="providerLeagueId"
               name="providerLeagueId"
@@ -98,21 +170,17 @@ export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
             hint={
               league.hasCredentials
                 ? `Stored: ${league.credentialHint ?? "yes"}. Leave blank to keep it.`
-                : "Only needed for private leagues or past seasons. Include the braces."
+                : "Only needed for private leagues or past seasons."
             }
           >
-            <Input id="swid" name="swid" type="password" placeholder="{AAAA-BBBB-…}" autoComplete="off" />
+            <Input id="swid" name="swid" type="password" autoComplete="off" />
           </Field>
 
-          <Field
-            label="espn_s2 cookie"
-            htmlFor="espnS2"
-            hint="The long value from the espn_s2 cookie on espn.com."
-          >
+          <Field label="espn_s2 cookie" htmlFor="espnS2">
             <Input id="espnS2" name="espnS2" type="password" autoComplete="off" />
           </Field>
 
-          <Submit label="Save connection" pendingLabel="Saving…" />
+          <Submit label="Save connection" pendingLabel="Saving…" variant="subtle" />
           <Result state={connectState} />
         </form>
       </Card>
@@ -120,7 +188,7 @@ export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
       <Card variant="bordered" className="p-4">
         <h3 className="text-sm font-semibold">Test connection</h3>
         <p className="text-muted mt-1 mb-3 text-xs">
-          Checks reachability and authentication. Writes nothing.
+          Checks reachability and authentication for {league.name}. Writes nothing.
         </p>
         <form action={testAction} className="flex flex-wrap items-end gap-2">
           <input type="hidden" name="leagueId" value={league.id} />
@@ -138,17 +206,17 @@ export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
       </Card>
 
       <Card variant="bordered" className="p-4">
-        <h3 className="text-sm font-semibold">Run a sync</h3>
+        <h3 className="text-sm font-semibold">Re-sync {league.name}</h3>
         <p className="text-muted mt-1 mb-3 text-xs leading-relaxed">
-          Imports seasons and re-runs the event engine. Safe to repeat —
-          existing rows are updated in place and manual corrections are kept.
+          Safe to repeat — existing rows are updated in place and manual
+          corrections are kept.
         </p>
         <form action={syncAction} className="space-y-3">
           <input type="hidden" name="leagueId" value={league.id} />
           <Field
             label="Seasons"
             htmlFor="seasons"
-            hint="Comma separated, e.g. 2025,2026. Leave blank to import every season the provider offers."
+            hint="Comma separated, e.g. 2025,2026. Blank imports everything available."
           >
             <Input id="seasons" name="seasons" placeholder="2026" />
           </Field>
@@ -160,7 +228,7 @@ export function ProviderPanel({ leagues }: { leagues: ProviderLeague[] }) {
           <Result state={syncState} />
         </form>
       </Card>
-    </div>
+    </>
   );
 }
 
@@ -193,8 +261,12 @@ function Result({ state }: { state: ProviderActionState }) {
         state.ok ? "border-win/30 text-win" : "border-loss/30 text-loss"
       }`}
     >
-      <p className="flex items-center gap-1.5 font-medium">
-        {state.ok ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+      <p className="flex items-start gap-1.5 font-medium">
+        {state.ok ? (
+          <CheckCircle2 className="mt-px size-3.5 shrink-0" />
+        ) : (
+          <AlertCircle className="mt-px size-3.5 shrink-0" />
+        )}
         {state.message}
       </p>
       {state.detail?.length ? (
