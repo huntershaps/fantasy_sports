@@ -8,6 +8,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Stat, StatGrid } from "@/components/ui/stat";
 import { requireRole } from "@/lib/session";
 import { db } from "@/lib/db";
+import { decryptJson, maskSecret } from "@/lib/crypto";
+import {
+  ProviderPanel,
+  type ProviderLeague,
+} from "@/components/admin/provider-panel";
 
 export const metadata: Metadata = { title: "Data Sync" };
 
@@ -34,13 +39,45 @@ export default async function AdminSyncPage() {
         id: true,
         name: true,
         provider: true,
-        providerCredential: { select: { provider: true, lastCheckedAt: true } },
+        providerCredential: {
+          select: {
+            provider: true,
+            lastCheckedAt: true,
+            providerLeagueId: true,
+            encryptedData: true,
+          },
+        },
       },
       orderBy: { name: "asc" },
     }),
   ]);
 
   const latest = syncs[0];
+
+  // Only a masked hint crosses to the client; the secrets stay on the server.
+  const providerLeagues: ProviderLeague[] = leagues.map((league) => {
+    let hint: string | null = null;
+    let hasCredentials = false;
+    if (league.providerCredential?.encryptedData) {
+      try {
+        const creds = decryptJson<Record<string, string>>(
+          league.providerCredential.encryptedData,
+        );
+        hasCredentials = Boolean(creds.swid && creds.espnS2);
+        if (creds.swid) hint = maskSecret(creds.swid);
+      } catch {
+        hint = "unreadable — re-enter";
+      }
+    }
+    return {
+      id: league.id,
+      name: league.name,
+      provider: league.provider,
+      providerLeagueId: league.providerCredential?.providerLeagueId ?? null,
+      hasCredentials,
+      credentialHint: hint,
+    };
+  });
 
   return (
     <AdminShell
@@ -72,6 +109,11 @@ export default async function AdminSyncPage() {
           tone={(latest?._count.errors ?? 0) > 0 ? "loss" : "muted"}
         />
       </StatGrid>
+
+      <SectionHeader label="Setup" title="Connect and import" />
+      <div className="mb-10 max-w-xl">
+        <ProviderPanel leagues={providerLeagues} />
+      </div>
 
       <SectionHeader label="Connections" title="Providers" />
       <div className="mb-10 space-y-3">
