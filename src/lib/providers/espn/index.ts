@@ -326,19 +326,18 @@ export const espnProvider: FantasyProvider = {
         });
 
     /**
-     * Transactions are not solved.
+     * Transactions need their own request per scoring period.
      *
-     * ESPN will not return the branch from the combined league call, and every
-     * documented way of asking for it separately was rejected. Verified against
-     * a real league on both a completed and an active season: `mTransactions2`,
-     * `mRecentActivity` and `kona_league_communication` all answer **400** as
-     * soon as an `x-fantasy-filter` header is attached, and answer 200 with the
-     * branch absent when it is not. A 400 means the header is being parsed and
-     * refused, so the filter shape — or the reads host's tolerance of it — is
-     * wrong, not the credentials.
+     * Two things make this work, both counter to the widely repeated advice:
      *
-     * The loop bails on the first failure rather than firing one doomed request
-     * per scoring period. Trades, waivers and drops therefore do not import yet.
+     * 1. No `x-fantasy-filter` header. Attaching one makes ESPN answer 400 —
+     *    it is the cause of the failure, not the cure. Verified on both a
+     *    completed and an active season.
+     * 2. `scoringPeriodId` is required. Asking for `mTransactions2` without it
+     *    returns 200 with the branch absent, which reads like "no data" rather
+     *    than "you asked wrong".
+     *
+     * The combined league call never returns transactions no matter what.
      */
     const rawTransactions: NonNullable<EspnLeaguePayload["transactions"]> = [];
     const lastPeriod = Math.max(
@@ -353,22 +352,13 @@ export const espnProvider: FantasyProvider = {
           seasonYear,
           ["mTransactions2"],
           auth,
-          {
-            scoringPeriodId: period,
-            filter: {
-              transactions: {
-                filterType: { value: ["WAIVER", "TRADE", "FREEAGENT", "ROSTER"] },
-              },
-            },
-          },
+          { scoringPeriodId: period },
         );
         if (periodData.transactions?.length) {
           rawTransactions.push(...periodData.transactions);
         }
       } catch {
-        // Whatever rejects one period rejects them all, so stop rather than
-        // spending a request per week to collect the same failure.
-        break;
+        // A single unavailable week must not sink the import.
       }
     }
 

@@ -1,7 +1,6 @@
 import "dotenv/config";
 
-/** Tries several documented shapes for pulling ESPN transactions, so we can
- *  see which (if any) actually returns a `transactions` branch.
+/** Tests transaction endpoints across both ESPN hosts.
  *    pnpm exec tsx scripts/probe-txn.mts <leagueId> <season> <scoringPeriod> */
 const leagueId = process.argv[2] ?? "1893127963";
 const season = Number(process.argv[3] ?? 2025);
@@ -10,65 +9,53 @@ const period = Number(process.argv[4] ?? 5);
 const swid = (process.env.ESPN_SWID ?? "").trim();
 const s2 = (process.env.ESPN_S2 ?? "").trim();
 const cookie = `SWID=${swid.startsWith("{") ? swid : `{${swid}}`}; espn_s2=${s2}`;
-const HOST = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl";
 
-const attempts: { label: string; url: string; filter?: unknown }[] = [
-  {
-    label: "mTransactions2 + filter + scoringPeriodId",
-    url: `${HOST}/seasons/${season}/segments/0/leagues/${leagueId}?view=mTransactions2&scoringPeriodId=${period}`,
-    filter: { transactions: { filterType: { value: ["WAIVER", "TRADE", "FREEAGENT"] } } },
+const HOSTS = {
+  reads: "https://lm-api-reads.fantasy.espn.com",
+  www: "https://fantasy.espn.com",
+};
+
+const TXN_FILTER = {
+  transactions: { filterType: { value: ["WAIVER", "TRADE", "ADD", "DROP"] } },
+};
+
+const COMMS_FILTER = {
+  topics: {
+    filterType: { value: ["ACTIVITY_TRANSACTIONS"] },
+    limit: 50,
+    sortMessageDate: { sortPriority: 1, sortAsc: false },
   },
-  {
-    label: "mTransactions2 + filter, no scoringPeriodId",
-    url: `${HOST}/seasons/${season}/segments/0/leagues/${leagueId}?view=mTransactions2`,
-    filter: { transactions: { filterType: { value: ["WAIVER", "TRADE", "FREEAGENT"] } } },
-  },
-  {
-    label: "communication/transactions endpoint",
-    url: `${HOST}/seasons/${season}/segments/0/leagues/${leagueId}/transactions?scoringPeriodId=${period}`,
-  },
-  {
-    label: "mRecentActivity + filter",
-    url: `${HOST}/seasons/${season}/segments/0/leagues/${leagueId}?view=mRecentActivity`,
-    filter: {
-      topics: {
-        filterType: { value: ["ACTIVITY_TRANSACTIONS"] },
-        limit: 25,
-        sortMessageDate: { sortPriority: 1, sortAsc: false },
-      },
-    },
-  },
-  {
-    // What espn-api's recent_activity actually does: the league endpoint with
-    // the communication view, and the full topics filter it sends.
-    label: "kona_league_communication on league endpoint",
-    url: `${HOST}/seasons/${season}/segments/0/leagues/${leagueId}?view=kona_league_communication`,
-    filter: {
-      topics: {
-        filterType: { value: ["ACTIVITY_TRANSACTIONS"] },
-        limit: 25,
-        limitPerMessageSet: { value: 25 },
-        offset: 0,
-        sortMessageDate: { sortPriority: 1, sortAsc: false },
-        sortFor: { sortPriority: 2, sortAsc: false },
-        filterIncludeMessageTypeIds: {
-          value: [178, 180, 179, 239, 181, 244, 188, 198, 197],
-        },
-      },
-    },
-  },
-];
+};
+
+type Attempt = { label: string; url: string; filter: unknown };
+const attempts: Attempt[] = [];
+
+for (const [hostName, host] of Object.entries(HOSTS)) {
+  const league = `${host}/apis/v3/games/ffl/seasons/${season}/segments/0/leagues/${leagueId}`;
+  attempts.push({
+    label: `${hostName}: mTransactions2 + period ${period}`,
+    url: `${league}?view=mTransactions2&scoringPeriodId=${period}`,
+    filter: TXN_FILTER,
+  });
+  attempts.push({
+    label: `${hostName}: kona_league_communication`,
+    url: `${league}?view=kona_league_communication`,
+    filter: COMMS_FILTER,
+  });
+}
 
 for (const attempt of attempts) {
   try {
     const response = await fetch(attempt.url, {
       headers: {
         accept: "application/json",
-        "user-agent": "Mozilla/5.0",
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
         cookie,
-        ...(attempt.filter ? { "x-fantasy-filter": JSON.stringify(attempt.filter) } : {}),
+        "x-fantasy-filter": JSON.stringify(attempt.filter),
       },
       cache: "no-store",
+      redirect: "follow",
     });
 
     if (!response.ok) {
@@ -76,24 +63,28 @@ for (const attempt of attempts) {
       continue;
     }
 
-    const json = (await response.json()) as Record<string, unknown>;
-    const body = Array.isArray(json) ? (json[0] as Record<string, unknown>) : json;
-    const keys = Object.keys(body ?? {});
-    const txns = body?.transactions as unknown[] | undefined;
-    const topics = body?.topics as unknown[] | undefined;
+    const text = await response.text();
+    let body: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(text);
+      body = (Array.isArray(parsed) ? parsed[0] : parsed) ?? {};
+    } catch {
+      console.log(`${attempt.label}\n  non-JSON (${text.length} bytes)\n`);
+      continue;
+    }
 
+    const txns = body.transactions as unknown[] | undefined;
+    const topics = body.topics as unknown[] | undefined;
     console.log(attempt.label);
-    console.log(`  keys: ${keys.join(", ") || "(none)"}`);
+    console.log(`  keys: ${Object.keys(body).join(", ").slice(0, 120) || "(none)"}`);
     console.log(`  transactions: ${Array.isArray(txns) ? txns.length : "absent"}`);
     console.log(`  topics: ${Array.isArray(topics) ? topics.length : "absent"}`);
-    if (Array.isArray(txns) && txns.length > 0) {
-      console.log(`  sample: ${JSON.stringify(txns[0]).slice(0, 320)}`);
-    }
-    if (Array.isArray(topics) && topics.length > 0) {
-      console.log(`  sample: ${JSON.stringify(topics[0]).slice(0, 320)}`);
-    }
+    const sample = (Array.isArray(txns) && txns[0]) || (Array.isArray(topics) && topics[0]);
+    if (sample) console.log(`  sample: ${JSON.stringify(sample).slice(0, 400)}`);
     console.log();
   } catch (error) {
-    console.log(`${attempt.label}\n  ERROR ${error instanceof Error ? error.message : error}\n`);
+    console.log(
+      `${attempt.label}\n  ERROR ${error instanceof Error ? error.message : error}\n`,
+    );
   }
 }
