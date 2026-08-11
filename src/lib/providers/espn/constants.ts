@@ -97,6 +97,26 @@ export const TRANSACTION_TYPE_BY_ESPN: Record<string, string> = {
   ROSTER: "COMMISSIONER",
 };
 
+/**
+ * Approximate calendar date for a fantasy week.
+ *
+ * ESPN's schedule carries no date, only a matchup period. Without one every
+ * imported game would land on the import date, which would wreck anniversaries
+ * — the whole premise of the archive. NFL week 1 opens the Thursday after the
+ * first Monday in September; each later week is seven days on. Good enough to
+ * put a game in the right week of the right year.
+ */
+export function approximateWeekDate(seasonYear: number, week: number): Date {
+  const september = new Date(Date.UTC(seasonYear, 8, 1));
+  const dayOfWeek = september.getUTCDay(); // 0 = Sunday
+  const daysToMonday = (8 - dayOfWeek) % 7;
+  const laborDay = 1 + daysToMonday; // first Monday in September
+  const kickoffThursday = laborDay + 3;
+  return new Date(
+    Date.UTC(seasonYear, 8, kickoffThursday + (Math.max(1, week) - 1) * 7),
+  );
+}
+
 /** Playoff bracket labelling. ESPN marks bracket games with playoffTierType;
  *  the specific round has to be inferred from how deep into the playoffs the
  *  matchup period sits. */

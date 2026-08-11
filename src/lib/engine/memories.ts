@@ -51,11 +51,14 @@ export function computeMemories(
   const drafts: MemoryDraft[] = [];
   const team = (id: string) => history.teamsById.get(id);
 
+  // An imported team has no linked user until someone claims it, so fall back
+  // to the team's own name. "The Big DIHcker won the championship" reads fine;
+  // "an unknown manager won the championship" does not.
   const teamInfo = (t: LoadedTeam | undefined) => ({
     teamId: t?.id ?? null,
     teamName: t?.name ?? "Unknown team",
     userId: t?.userId ?? null,
-    managerName: t?.managerName ?? "an unknown manager",
+    managerName: t?.managerName ?? t?.name ?? "Unknown team",
   });
 
   // ---- Every completed matchup ------------------------------------------

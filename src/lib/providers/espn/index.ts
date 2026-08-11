@@ -19,6 +19,7 @@ import {
   POSITION_BY_ID,
   PRO_TEAM_BY_ID,
   TRANSACTION_TYPE_BY_ESPN,
+  approximateWeekDate,
   matchupTypeFor,
 } from "./constants";
 import type {
@@ -259,7 +260,7 @@ export const espnProvider: FantasyProvider = {
           awayScore: round2(num(item.away?.totalPoints)),
           winner: decided ? (winner as "HOME" | "AWAY" | "TIE") : null,
           isComplete: decided,
-          playedOn: null,
+          playedOn: approximateWeekDate(seasonYear, week),
           homeLineup: lineupFor(item.home),
           awayLineup: lineupFor(item.away),
         },
