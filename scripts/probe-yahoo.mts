@@ -35,7 +35,11 @@ const text = body.toLowerCase();
 if (text.includes("invalid_client") || location?.includes("invalid_client")) {
   console.log("\nVERDICT: Yahoo does not recognise this client id.");
 } else if (text.includes("invalid_scope") || location?.includes("invalid_scope")) {
-  console.log("\nVERDICT: the app exists but is NOT granted fantasy read (fspt-r).");
+  console.log("\nVERDICT: the app is valid but has not been granted fantasy read (fspt-r).");
+  console.log("Registering an app is only half of it — fantasy scope is granted");
+  console.log("separately on application, and each request is reviewed by Yahoo:");
+  console.log("  https://sports.yahoo.com/developer/access/");
+  console.log("Re-run this once approved; the verdict flips to a sign-in redirect.");
 } else if (response.status === 302 && location?.includes("login.yahoo.com")) {
   console.log("\nVERDICT: scope accepted — Yahoo is asking you to sign in. Fantasy read works.");
 } else if (response.status === 200 && text.includes("sign in")) {
