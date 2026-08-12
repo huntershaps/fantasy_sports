@@ -62,11 +62,10 @@ const ROUTES = [
   "/",
   "/home",
   "/leagues",
-  "/league/the-founders-league",
-  "/league/the-founders-league?season=2023",
-  "/league/the-founders-league/schedule?season=2024",
-  "/league/the-founders-league/standings?season=2024",
-  "/league/sunday-scaries",
+  "/league/the-aussie-grillers",
+  "/league/the-aussie-grillers?season=2025",
+  "/league/the-aussie-grillers/schedule?season=2025",
+  "/league/the-aussie-grillers/standings?season=2025",
   "/teams",
   "/schedule",
   "/standings",
@@ -109,7 +108,7 @@ for (const route of ROUTES) {
 const detailProbes = [
   ["/memories/", "/memories", /href="\/memories\/([^"?]+)"/],
   ["/awards/", "/awards", /href="\/awards\/([^"?]+)"/],
-  ["/matchup/", "/league/the-founders-league?season=2024", /href="\/matchup\/([^"?]+)"/],
+  ["/matchup/", "/league/the-aussie-grillers?season=2025", /href="\/matchup\/([^"?]+)"/],
   ["/profile/", "/admin/users", /href="\/profile\/([^"?]+)"/],
 ];
 
