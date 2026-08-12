@@ -415,7 +415,14 @@ export const espnProvider: FantasyProvider = {
         playoffTeamCount,
         scoringType: settings?.scoringSettings?.scoringType ?? "STANDARD",
         currentWeek: num(data.status?.currentMatchupPeriod, 1),
-        isComplete: data.status?.isActive === false,
+        // ESPN leaves `isActive` true on seasons that finished years ago, so
+        // trusting it marks completed seasons as in progress — and the event
+        // engine skips awards for anything unfinished, which silently costs
+        // every championship and certificate. Judge by the calendar and the
+        // bracket instead.
+        isComplete:
+          seasonYear < new Date().getFullYear() ||
+          num(data.status?.currentMatchupPeriod, 0) > finalPeriod,
         availableSeasons: [
           ...new Set([...(data.status?.previousSeasons ?? []), seasonYear]),
         ].sort((a, b) => b - a),
