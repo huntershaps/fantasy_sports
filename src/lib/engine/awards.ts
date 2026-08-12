@@ -33,7 +33,7 @@ export function computeAwards(history: LeagueHistory): AwardDraft[] {
     .filter((s) => s.isComplete)
     .flatMap((s) => s.teams);
 
-  if (completedTeams.length > 0) {
+  if (completedTeams.filter((t) => t.userId).length > 0) {
     const greatest = [...completedTeams].sort(
       (a, b) => b.wins - a.wins || b.pointsFor - a.pointsFor,
     )[0];
@@ -58,7 +58,9 @@ export function computeAwards(history: LeagueHistory): AwardDraft[] {
       dedupeKey: `${history.leagueId}:greatest_season`,
     });
 
-    const worst = [...completedTeams].sort(
+    // Unowned teams — abandoned slots and league bots — keep their results but
+    // are excluded from the wooden spoon. Nobody chose those scores.
+    const worst = [...completedTeams.filter((t) => t.userId)].sort(
       (a, b) => a.wins - b.wins || a.pointsFor - b.pointsFor,
     )[0];
     drafts.push({
@@ -187,15 +189,19 @@ function seasonAwards(history: LeagueHistory, season: LoadedSeason): AwardDraft[
       { week: high.week, matchupId: high.matchupId, isFeatured: true },
     );
 
-    const low = [...weekScores].sort((a, b) => a.score - b.score)[0];
-    const lowTeam = history.teamsById.get(low.teamId);
-    add(
-      "lowest_scoring_week",
-      low.teamId,
-      `${lowTeam?.name} scored only ${formatPoints(low.score)} in week ${low.week}.`,
-      { points: low.score, week: low.week },
-      { week: low.week, matchupId: low.matchupId },
-    );
+    const low = [...weekScores]
+      .filter((s) => history.teamsById.get(s.teamId)?.userId)
+      .sort((a, b) => a.score - b.score)[0];
+    if (low) {
+      const lowTeam = history.teamsById.get(low.teamId);
+      add(
+        "lowest_scoring_week",
+        low.teamId,
+        `${lowTeam?.name} scored only ${formatPoints(low.score)} in week ${low.week}.`,
+        { points: low.score, week: low.week },
+        { week: low.week, matchupId: low.matchupId },
+      );
+    }
   }
 
   // Margins
@@ -262,7 +268,7 @@ function seasonAwards(history: LeagueHistory, season: LoadedSeason): AwardDraft[
       w = game.result === "W" ? w + 1 : 0;
       l = game.result === "L" ? l + 1 : 0;
       if (w > bestRun.length) bestRun = { length: w, teamId: t.id };
-      if (l > worstRun.length) worstRun = { length: l, teamId: t.id };
+      if (l > worstRun.length && t.userId) worstRun = { length: l, teamId: t.id };
     }
   }
   if (bestRun.teamId) {

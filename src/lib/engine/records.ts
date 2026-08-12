@@ -84,6 +84,16 @@ function toDrafts(
   }));
 }
 
+/**
+ * A team nobody owns is an abandoned slot or a league-run bot. Its results are
+ * real and stay in the standings, but letting it hold the wooden-spoon records
+ * is misleading — nobody chose those scores. Achievements are unaffected; only
+ * the marks nobody wants are restricted to teams with a manager.
+ */
+function isOwned(team: LoadedTeam | undefined): boolean {
+  return Boolean(team?.userId);
+}
+
 export function computeRecords(history: LeagueHistory): RecordDraft[] {
   const drafts: RecordDraft[] = [];
   const team = (id: string) => history.teamsById.get(id);
@@ -124,7 +134,10 @@ export function computeRecords(history: LeagueHistory): RecordDraft[] {
 
   drafts.push(
     ...toDrafts(
-      progression(teamWeeks, (c, b) => c < b),
+      progression(
+        teamWeeks.filter((e) => isOwned(team(e.teamId ?? ""))),
+        (c, b) => c < b,
+      ),
       {
         category: "TEAM",
         key: "lowest_team_score",
@@ -254,7 +267,9 @@ export function computeRecords(history: LeagueHistory): RecordDraft[] {
     .flatMap((s) => s.teams);
 
   drafts.push(...seasonExtreme(completedTeams, "most", history));
-  drafts.push(...seasonExtreme(completedTeams, "fewest", history));
+  drafts.push(
+    ...seasonExtreme(completedTeams.filter((t) => isOwned(t)), "fewest", history),
+  );
 
   // ---- Streaks -----------------------------------------------------------
   drafts.push(...streakRecords(history));
@@ -311,7 +326,7 @@ function streakRecords(history: LeagueHistory): RecordDraft[] {
         if (winRun > bestWin.length) {
           bestWin = { length: winRun, team, endedOn: game.matchup.playedOn };
         }
-        if (lossRun > worstLoss.length) {
+        if (lossRun > worstLoss.length && isOwned(team)) {
           worstLoss = { length: lossRun, team, endedOn: game.matchup.playedOn };
         }
       }
