@@ -33,7 +33,10 @@ const MANAGERS: Record<string, string> = {
   "Godell'sBasementBoys🤭": "Karistopher Gadsden",
   Boys4Jesus: "andy do",
   "Adriano's Awesome Team": "Adriano Cuadros",
-  // "On Stroud 9" is deliberately absent — ESPN reports it as having no manager.
+  // Hunter's own franchise, renamed between seasons.
+  "Waddle You Do?": "Hunter Shapiro",
+  "Aussie Shakers": "Hunter Shapiro",
+  // "On Stroud 9" is deliberately absent: it was a bot team, not a person.
 };
 
 const db = new PrismaClient({
