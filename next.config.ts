@@ -7,6 +7,23 @@ const nextConfig: NextConfig = {
   // anything that builds a URL by hand must use BASE_PATH from src/lib/paths.
   basePath: "/fantasy",
   experimental: {
+    // The app is reached through a proxy, so the browser's Origin is the
+    // public domain while the app itself sees the host it is deployed on.
+    // Next treats that mismatch as CSRF and aborts every Server Action —
+    // login, register, password reset, admin role changes, all of it — with
+    // "Invalid Server Actions request". These are the origins allowed to
+    // reach it: the public domain, and the local portfolio server that
+    // reproduces the same proxy hop in development.
+    // PUBLIC_ORIGIN overrides the default without a code change, because
+    // getting this list wrong breaks every form on the site.
+    serverActions: {
+      allowedOrigins: [
+        ...(process.env.PUBLIC_ORIGIN ? [process.env.PUBLIC_ORIGIN] : []),
+        "huntermshaps.com",
+        "www.huntermshaps.com",
+        "localhost:8000",
+      ],
+    },
     // Enables forbidden() / unauthorized() so authorization failures render a
     // real 403/401 page instead of redirecting to a misleading login screen.
     authInterrupts: true,

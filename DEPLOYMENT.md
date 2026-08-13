@@ -71,6 +71,7 @@ variables in the Netlify UI:
 | `AUTH_URL`                  | `https://huntermshaps.com/fantasy/api/auth`       |
 | `AUTH_TRUST_HOST`           | `true`                                            |
 | `CREDENTIAL_ENCRYPTION_KEY` | from `gen-secrets.mjs`                            |
+| `PUBLIC_ORIGIN`             | `huntermshaps.com` — host only, no scheme         |
 
 `AUTH_URL` and `AUTH_TRUST_HOST` are both required: the app sees Netlify's
 internal host through the proxy, and without these Auth.js builds callback URLs
@@ -138,6 +139,23 @@ The first should be `200`, the second a JSON object containing `csrfToken`. If
 the CSRF call returns `400`, `AUTH_URL` is wrong. Then register an account
 through the UI and confirm you stay signed in across a page load — that is the
 real test of whether cookies survive the proxy.
+
+## Server Actions and the proxy
+
+Next 16 rejects a Server Action whose `Origin` does not match the host it sees,
+as CSRF protection. Behind a proxy those never match — the browser sends
+`huntermshaps.com`, the app sees its own Netlify host — so **every form on the
+site fails with `Invalid Server Actions request`**: login, register, password
+reset, admin role changes.
+
+`serverActions.allowedOrigins` in `next.config.ts` fixes it, and
+`PUBLIC_ORIGIN` overrides the list without a code change. Getting it wrong
+breaks every form, so if forms 500 in production after a domain change, check
+this first.
+
+The protection still works: an action arriving from an origin outside the list
+is rejected exactly as before. The list only widens it to the domain the app is
+legitimately served from.
 
 ## Known risk
 
