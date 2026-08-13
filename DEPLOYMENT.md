@@ -87,7 +87,47 @@ In `portfolio/netlify.toml`, replace `fantasy-sports-museum.netlify.app` with
 the URL from step 2, in both redirect blocks. Then deploy the portfolio site
 and attach `huntermshaps.com` to it.
 
-### 4. Check it end to end
+### 4. Make yourself the first Super Admin
+
+Registration always creates a plain `USER`, and only a `SUPER_ADMIN` can change
+roles from `/admin/users`. A fresh database therefore has no admin at all —
+the seed grants it in development, but the seed must never be run against real
+data. Bootstrap it by hand instead:
+
+1. **Register through the UI** at `https://huntermshaps.com/fantasy/register`.
+   Do this the moment the site is live. There is no email verification, so the
+   address is claimed first-come, and this repository is public.
+2. **Grant the role**, pointing `DATABASE_URL` at Neon for the one command:
+
+   ```bash
+   DATABASE_URL="<neon-url>" pnpm exec tsx scripts/grant-role.mts
+   ```
+
+   It defaults to `hunter@sflinsider.com` and `SUPER_ADMIN`; both can be passed
+   as arguments. It only ever promotes an account that already exists — it
+   never creates one, so no password passes through a terminal.
+
+From then on every other role change happens in `/admin/users`.
+
+### Forgotten passwords, with no mail transport
+
+Nothing is wired up to send email yet, so the in-app "forgot password" flow can
+create a token but cannot deliver it. The page says so rather than claiming a
+message is on its way. To get a link, an operator mints one:
+
+```bash
+BASE_URL=https://huntermshaps.com DATABASE_URL="<neon-url>" pnpm exec tsx scripts/reset-link.mts <email>
+```
+
+It prints a single-use link valid for one hour and invalidates any earlier
+ones. Open it and choose a password in the app. Treat the link as a sign-in:
+anyone holding it can set that account's password.
+
+Wiring up real email later means setting `RESEND_API_KEY` or `SMTP_HOST` and
+sending the link from `requestPasswordReset`. The UI already switches its copy
+based on whether either is present.
+
+### 5. Check it end to end
 
 ```bash
 curl -sI https://huntermshaps.com/fantasy/login | head -1

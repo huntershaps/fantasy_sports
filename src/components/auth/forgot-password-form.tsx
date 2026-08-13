@@ -21,9 +21,13 @@ export function ForgotPasswordForm() {
           <CheckCircle2 className="size-6" />
         </div>
         <div>
-          <h1 className="text-xl font-semibold">Check your email</h1>
+          <h1 className="text-xl font-semibold">
+            {state.mailConfigured ? "Check your email" : "Request received"}
+          </h1>
           <p className="text-muted mt-2 text-sm leading-relaxed">
-            If an account exists for that address, a reset link is on its way.
+            {state.mailConfigured
+              ? "If an account exists for that address, a reset link is on its way."
+              : "Email delivery is not set up on this archive yet, so no message will arrive. Ask the commissioner to generate a reset link for you."}
           </p>
         </div>
 

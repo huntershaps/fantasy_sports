@@ -9,8 +9,14 @@ export type ResetRequestState = {
   sent?: boolean;
   /** Development only: the link that would have been emailed. */
   devLink?: string;
+  /** False when no mail transport exists, so the UI can stop promising email. */
+  mailConfigured?: boolean;
   error?: string;
 };
+
+/** There is no mail transport wired up yet; this is where it gets detected. */
+const mailIsConfigured = () =>
+  Boolean(process.env.RESEND_API_KEY || process.env.SMTP_HOST);
 
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
@@ -28,8 +34,9 @@ export async function requestPasswordReset(
   });
 
   // Always report success so this endpoint cannot be used to discover which
-  // email addresses have accounts.
-  if (!user || user.isDisabled) return { sent: true };
+  // email addresses have accounts. Whether mail is configured is a property of
+  // the deployment, not of the account, so reporting it leaks nothing.
+  if (!user || user.isDisabled) return { sent: true, mailConfigured: mailIsConfigured() };
 
   const token = randomBytes(32).toString("base64url");
   await db.passwordResetToken.create({
@@ -41,11 +48,15 @@ export async function requestPasswordReset(
   });
 
   // No mail transport is configured yet. In development the link is returned
-  // so the flow is testable; in production it must be emailed instead.
+  // so the flow is testable. In production it cannot be shown on screen —
+  // that would let anyone reset anyone's password — so an operator mints one
+  // with `pnpm exec tsx scripts/reset-link.mts <email>` instead.
   const link = `/reset-password?token=${token}`;
-  return process.env.NODE_ENV === "development"
-    ? { sent: true, devLink: link }
-    : { sent: true };
+  return {
+    sent: true,
+    mailConfigured: mailIsConfigured(),
+    ...(process.env.NODE_ENV === "development" ? { devLink: link } : {}),
+  };
 }
 
 export type ResetState = { error?: string; fieldErrors?: Record<string, string>; done?: boolean };
