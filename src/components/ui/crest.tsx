@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { cn, initials } from "@/lib/utils";
 
 const sizes = {
@@ -38,8 +41,11 @@ export function paletteFor(name: string) {
  * bar — rather than a coloured circle, so an unclaimed team still looks like it
  * belongs to a sports product.
  *
- * `src` always wins when present, which is how a user-supplied picture
- * overrides the generated fallback.
+ * `src` wins when present and loadable, which is how a user-supplied picture
+ * overrides the generated fallback. When it fails to load we fall back to the
+ * monogram rather than leaving an empty frame — ESPN serves manager-uploaded
+ * logos from an endpoint that answers 401 to anyone without a session, so a
+ * dead logo URL is the normal case, not an edge case.
  */
 export function Crest({
   name,
@@ -59,8 +65,9 @@ export function Crest({
   const px = sizes[size];
   const palette = paletteFor(name);
   const id = `crest-${hash(name).toString(36)}`;
+  const [broken, setBroken] = useState(false);
 
-  if (src) {
+  if (src && !broken) {
     // A plain <img>, deliberately. Profile pictures are user-supplied URLs on
     // arbitrary hosts; routing them through next/image would mean either
     // allow-listing every possible host or letting the optimizer fetch any URL
@@ -83,6 +90,7 @@ export function Crest({
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           referrerPolicy="no-referrer"
+          onError={() => setBroken(true)}
           className="size-full object-cover"
         />
       </span>

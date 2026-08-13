@@ -29,11 +29,26 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
   },
   images: {
+    // ESPN serves team logos from several hosts, not just a.espncdn.com:
+    // g.espncdn.com for the stock logo packs, and mystique-api for the ones
+    // managers upload themselves. A host missing here is not a soft failure —
+    // the optimizer answers 400 and every logo renders broken.
     remotePatterns: [
-      { protocol: "https", hostname: "a.espncdn.com" },
-      { protocol: "https", hostname: "s.yimg.com" },
+      { protocol: "https", hostname: "**.espncdn.com" },
+      { protocol: "https", hostname: "**.fantasy.espn.com" },
+      { protocol: "https", hostname: "**.yimg.com" },
       { protocol: "https", hostname: "sleepercdn.com" },
     ],
+    // Note: nothing currently renders through next/image — Crest uses a plain
+    // <img> on purpose, because profile pictures are user-supplied URLs on
+    // arbitrary hosts. These patterns are here for when something does.
+    //
+    // Most stock ESPN logos are SVG, which the optimizer refuses without
+    // `dangerouslyAllowSVG`. That is deliberately NOT enabled: an SVG can
+    // carry script, and turning it on for a code path nothing uses would be
+    // taking on risk for no benefit. Enable it — together with
+    // contentDispositionType "attachment" and a sandboxing CSP — only if
+    // logos ever move to next/image.
   },
 };
 
