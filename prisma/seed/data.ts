@@ -261,7 +261,7 @@ export const LEAGUE_TWO_MANAGERS: SeedManager[] = [
 
 /** Team names rotate year to year, which is exactly why Franchise exists. */
 export const TEAM_NAMES: string[] = [
-  "The Big Dih",
+  "Stat Correction Survivors",
   "Comeback Szn",
   "Regulation Gentlemen",
   "Dropped Third Down",

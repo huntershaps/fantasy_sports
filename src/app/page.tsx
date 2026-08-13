@@ -71,7 +71,7 @@ export default async function LandingPage() {
               Liam Castellano won the 2023 championship, beating you 140.23–116.14.
             </p>
             <p className="text-muted mt-2 text-md">
-              The Big Dih over Overtime Optimists
+              Regulation Gentlemen over Overtime Optimists
             </p>
           </div>
 
@@ -81,7 +81,11 @@ export default async function LandingPage() {
           </p>
         </section>
 
+        {/* Framed as one league's archive, not as platform-wide totals — these
+            are illustrative figures, and unlabelled numbers on a landing page
+            read as a live count. */}
         <section className="border-line border-t py-14">
+          <p className="label mb-6">What ten seasons of one league leaves behind</p>
           <dl className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
             {[
               ["Seasons archived", "10"],
