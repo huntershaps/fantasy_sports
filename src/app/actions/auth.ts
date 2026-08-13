@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { signIn } from "@/auth";
 import { db } from "@/lib/db";
+import { withBase } from "@/lib/paths";
 
 export type AuthFormState = { error?: string; fieldErrors?: Record<string, string> };
 
@@ -28,7 +29,9 @@ export async function loginAction(
 
   const next = String(formData.get("next") || "/home");
   // Only same-origin paths, so a crafted ?next= cannot bounce users off-site.
-  const redirectTo = next.startsWith("/") && !next.startsWith("//") ? next : "/home";
+  // Auth.js resolves redirectTo against the origin, not the basePath.
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/home";
+  const redirectTo = withBase(safeNext);
 
   try {
     await signIn("credentials", { ...parsed.data, redirectTo });
@@ -92,7 +95,7 @@ export async function registerAction(
     await signIn("credentials", {
       email,
       password: parsed.data.password,
-      redirectTo: "/home",
+      redirectTo: withBase("/home"),
     });
   } catch (error) {
     if (error instanceof AuthError) {

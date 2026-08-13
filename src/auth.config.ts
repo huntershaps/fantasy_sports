@@ -1,14 +1,23 @@
 import type { NextAuthConfig } from "next-auth";
 import type { UserRole } from "@/generated/prisma/enums";
+import { ROUTES } from "@/lib/paths";
 
 /** Edge-safe half of the auth config. Middleware imports only this, because
  *  Prisma and bcrypt cannot run in the edge runtime. No providers here — the
  *  Credentials provider lives in auth.ts alongside the database. */
 export const authConfig = {
   providers: [],
+  // No `basePath` here on purpose. Next strips its own basePath before a route
+  // handler runs, so the handler sees /api/auth/session and Auth.js must keep
+  // its default to match it — setting /fantasy/api/auth produces
+  // "UnknownAction: Cannot parse action". The externally visible prefix is
+  // communicated with AUTH_URL instead (see AUTH_URL_VALUE in lib/paths).
+  //
+  // `pages`, by contrast, are resolved against the origin rather than the
+  // basePath, so those do need the prefix spelled out.
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: ROUTES.login,
+    error: ROUTES.login,
   },
   session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
   callbacks: {

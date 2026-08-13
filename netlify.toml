@@ -1,0 +1,31 @@
+# Netlify configuration for the Museum of Fantasy Sports app.
+#
+# This deploys as its own Netlify site. The portfolio site (huntermshaps.com)
+# proxies /fantasy/* here, so visitors only ever see the portfolio's domain.
+# The app is built with `basePath: "/fantasy"` (next.config.ts), which is why
+# every URL it serves already carries that prefix.
+
+[build]
+  command = "pnpm prisma generate && pnpm build"
+  publish = ".next"
+
+[build.environment]
+  # Prisma 7 needs the binaries fetched for the Netlify build image.
+  PRISMA_CLI_BINARY_TARGETS = "native"
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Auth endpoints must never be cached — a cached session response would hand
+# one visitor another visitor's session.
+[[headers]]
+  for = "/fantasy/api/auth/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
