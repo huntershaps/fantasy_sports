@@ -23,6 +23,29 @@ export async function setUserRole(formData: FormData) {
   revalidatePath("/admin/users");
 }
 
+/**
+ * Publish or unpublish a league's read-only archive at /l/<slug>.
+ *
+ * Restricted to Super Admin rather than Admin: this is the one setting that
+ * takes real people's names from behind a login and puts them on the open
+ * internet, so it should not be a click any admin can make by accident.
+ */
+export async function setLeaguePublic(formData: FormData) {
+  await requireApiRole("SUPER_ADMIN");
+
+  const leagueId = String(formData.get("leagueId"));
+  const isPublic = formData.get("isPublic") === "true";
+
+  const league = await db.league.update({
+    where: { id: leagueId },
+    data: { isPublic },
+    select: { slug: true },
+  });
+
+  revalidatePath("/admin/leagues");
+  revalidatePath(`/l/${league.slug}`);
+}
+
 export async function setUserDisabled(formData: FormData) {
   const actor = await requireApiRole("SUPER_ADMIN");
 

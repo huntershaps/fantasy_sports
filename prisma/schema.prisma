@@ -273,6 +273,10 @@ model League {
   foundedYear  Int
   provider     ProviderType @default(MANUAL)
   isArchived   Boolean      @default(false)
+  // Opt-in, never a default: a league holds real people's names, so it is
+  // private until a commissioner deliberately publishes it. Drives the
+  // read-only public page at /l/<slug>.
+  isPublic     Boolean      @default(false)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -288,6 +292,7 @@ model League {
   syncs               DataSync[]
 
   @@index([isArchived])
+  @@index([isPublic])
 }
 
 model LeagueSettings {

@@ -33,7 +33,12 @@ export default auth((req) => {
 
   const isSignedIn = Boolean(req.auth);
   const isPublic =
-    PUBLIC_ROUTES.includes(pathname) || pathname.startsWith("/api/auth");
+    PUBLIC_ROUTES.includes(pathname) ||
+    pathname.startsWith("/api/auth") ||
+    // Public league archives. The gate that matters is in the query itself —
+    // every public query filters on `isPublic: true`, so letting the route
+    // through here cannot expose a private league.
+    pathname.startsWith("/l/");
 
   // `clone()` keeps the query and origin but does NOT re-apply the basePath,
   // so redirect targets are written with withBase().

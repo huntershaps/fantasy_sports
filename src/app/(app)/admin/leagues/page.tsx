@@ -3,6 +3,8 @@ import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-page";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { setLeaguePublic } from "@/app/actions/admin";
 import { requireRole } from "@/lib/session";
 import { db } from "@/lib/db";
 
@@ -45,6 +47,11 @@ export default async function AdminLeaguesPage() {
                       Archived
                     </Badge>
                   ) : null}
+                  {league.isPublic ? (
+                    <Badge tone="win" size="xs">
+                      Public
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="text-faint text-xs">
                   /{league.slug} · est. {league.foundedYear} ·{" "}
@@ -74,6 +81,34 @@ export default async function AdminLeaguesPage() {
                   ) : null}
                 </Link>
               ))}
+            </div>
+
+            <div className="border-line mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              <div className="min-w-0">
+                <p className="label mb-1">Public archive</p>
+                <p className="text-faint text-xs">
+                  {league.isPublic ? (
+                    <>
+                      Anyone with the link can read this league&rsquo;s honour roll and
+                      standings, including manager names, at{" "}
+                      <Link href={`/l/${league.slug}`} className="hover:underline">
+                        /l/{league.slug}
+                      </Link>
+                      .
+                    </>
+                  ) : (
+                    "Private. Only members and admins can see this league."
+                  )}
+                </p>
+              </div>
+
+              <form action={setLeaguePublic}>
+                <input type="hidden" name="leagueId" value={league.id} />
+                <input type="hidden" name="isPublic" value={league.isPublic ? "false" : "true"} />
+                <Button type="submit" variant={league.isPublic ? "outline" : "primary"} size="sm">
+                  {league.isPublic ? "Make private" : "Publish publicly"}
+                </Button>
+              </form>
             </div>
           </Card>
         ))}
