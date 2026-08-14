@@ -61,18 +61,41 @@ function teamName(team: EspnTeam): string {
 }
 
 /**
- * Picks the fuller of ESPN's two roster branches.
+ * Merges ESPN's two roster branches, with the matchup-period one authoritative.
  *
- * `rosterForMatchupPeriod` carries only the players who counted — nine slots in
- * a standard lineup. `rosterForCurrentScoringPeriod` carries the whole roster
- * including the bench, which is what makes "you left 40 points on the bench"
- * possible. Prefer whichever has more entries, since which one is populated
- * varies by season and by which views were requested.
+ * `rosterForMatchupPeriod` is the record of who actually counted that week.
+ * `rosterForCurrentScoringPeriod` is the roster as it stands, which is where
+ * the bench comes from — and that is the catch: for a week already played it
+ * describes the roster *now*, not then.
+ *
+ * Choosing whichever list was longer therefore silently lost players. The
+ * current roster is almost always longer, because it includes the bench, so it
+ * won nearly every time — and any starter dropped later in the season was
+ * simply absent from the week they played in. In this league that removed a
+ * kicker from 36 of 138 team-weeks, each time leaving the team's stored
+ * starters a field goal short of its own recorded score.
+ *
+ * So: take the matchup period as the truth for who started and what they
+ * scored, then add anyone else from the current roster as bench. Those bench
+ * entries are approximate by nature — they are who is on the roster now — but
+ * they are additive, and the starters always reconcile with the final score.
  */
 function lineupFor(side: EspnMatchupSide | undefined): NormalizedLineupSlot[] {
-  const full = side?.rosterForCurrentScoringPeriod?.entries ?? [];
-  const starters = side?.rosterForMatchupPeriod?.entries ?? [];
-  return lineupFrom(full.length >= starters.length ? full : starters);
+  const matchupEntries = side?.rosterForMatchupPeriod?.entries ?? [];
+  const currentEntries = side?.rosterForCurrentScoringPeriod?.entries ?? [];
+
+  // Some seasons only populate one branch; with no matchup roster there is
+  // nothing authoritative to anchor to, so the current roster is all there is.
+  if (matchupEntries.length === 0) return lineupFrom(currentEntries);
+
+  const played = lineupFrom(matchupEntries);
+  const alreadyCounted = new Set(played.map((slot) => slot.providerPlayerId));
+
+  const benched = lineupFrom(currentEntries)
+    .filter((slot) => !alreadyCounted.has(slot.providerPlayerId))
+    .map((slot) => ({ ...slot, slot: "BENCH" as const, isStarter: false }));
+
+  return [...played, ...benched];
 }
 
 function lineupFrom(entries: EspnRosterEntry[] | undefined): NormalizedLineupSlot[] {
