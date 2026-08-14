@@ -1,0 +1,6 @@
+{
+  "_comment": "Copy to managers.local.json and replace with your league's real mapping. Keys are ESPN team names exactly as imported; values are the person who owns that franchise. A franchise renamed between seasons needs one entry per name it has had. Teams left out are reported as unassigned rather than guessed at, which is where bot teams belong. This file is a list of real people, so managers.local.json is gitignored — keep it that way.",
+  "Some Team Name": "First Last",
+  "A Renamed Franchise": "First Last",
+  "Its Earlier Name": "First Last"
+}

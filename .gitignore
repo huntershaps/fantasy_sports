@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Real people's names mapped to their teams — never commit this.
+scripts/managers.local.json

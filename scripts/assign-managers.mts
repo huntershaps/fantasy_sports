@@ -1,4 +1,7 @@
 import "dotenv/config";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
@@ -19,25 +22,28 @@ import { PrismaClient } from "../src/generated/prisma/client";
  */
 const leagueSlug = process.argv[2] ?? "the-aussie-grillers";
 
-const MANAGERS: Record<string, string> = {
-  "Easy Pickens": "Bhargav Vyas",
-  "The Big DIHcker": "Alain Dominguez",
-  "Noah's Nifty Team": "Noah Shapiro",
-  "Crashee Rice 🥇": "Bruno Cuadros",
-  "Crashee Rice": "Bruno Cuadros",
-  "Looking For Boutte": "Jackson Green",
-  "Hawk Tua": "Jacob Avrunin",
-  "La Pulga": "Gianmarco Bermejo",
-  "Beans United": "Jeanpierre Masutier",
-  "Liam's Lucrative Team": "Liam Rodgers",
-  "Godell'sBasementBoys🤭": "Karistopher Gadsden",
-  Boys4Jesus: "andy do",
-  "Adriano's Awesome Team": "Adriano Cuadros",
-  // Hunter's own franchise, renamed between seasons.
-  "Waddle You Do?": "Hunter Shapiro",
-  "Aussie Shakers": "Hunter Shapiro",
-  // "On Stroud 9" is deliberately absent: it was a bot team, not a person.
-};
+/**
+ * The team-to-person mapping lives in `scripts/managers.local.json`, which is
+ * gitignored.
+ *
+ * It is a list of real people's full names next to the teams they own. That
+ * does not belong in a public repository, and unlike a password it cannot be
+ * rotated once it is out. Copy `managers.example.json` and fill it in.
+ *
+ * A team with no entry is reported as unassigned rather than guessed at, so
+ * omitting someone is safe — bot teams belong left out.
+ */
+const here = dirname(fileURLToPath(import.meta.url));
+const mappingPath = process.env.MANAGERS_FILE ?? resolve(here, "managers.local.json");
+
+let MANAGERS: Record<string, string>;
+try {
+  MANAGERS = JSON.parse(readFileSync(mappingPath, "utf8"));
+} catch {
+  console.error(`No manager mapping at ${mappingPath}.`);
+  console.error("Copy scripts/managers.example.json to scripts/managers.local.json and fill it in.");
+  process.exit(1);
+}
 
 const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
