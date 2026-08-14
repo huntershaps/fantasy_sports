@@ -376,6 +376,23 @@ async function writeSeason(
       { teamId: awayId, slots: matchup.awayLineup },
     ];
     for (const { teamId, slots } of lineups) {
+      // A lineup is a complete snapshot of who a team fielded, so the stored
+      // rows have to end up matching it exactly. Upserting alone only ever
+      // adds and edits, which would leave behind anyone a previous — and, as
+      // it turned out, wrong — import had attributed to this week. Those
+      // ghosts would keep inflating starter totals and bench points forever.
+      const keep = slots
+        .map((slot) => playerIdByProvider.get(slot.providerPlayerId))
+        .filter((id): id is string => Boolean(id));
+
+      await db.matchupPlayer.deleteMany({
+        where: {
+          matchupId,
+          fantasyTeamId: teamId,
+          ...(keep.length > 0 ? { playerId: { notIn: keep } } : {}),
+        },
+      });
+
       for (const slot of slots) {
         const playerId = playerIdByProvider.get(slot.providerPlayerId);
         if (!playerId) continue;
