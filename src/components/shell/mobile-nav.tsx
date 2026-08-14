@@ -23,7 +23,14 @@ export function MobileNav({
   const primary = primaryMobileItems(user.role);
   const sections = navigationFor(user.role);
 
-  useEffect(() => setOpen(false), [pathname]);
+  // Navigating closes the sheet. Adjusting during render rather than in an
+  // effect means the sheet never paints once in the open state on the new page
+  // before closing itself.
+  const [routeWhenOpened, setRouteWhenOpened] = useState(pathname);
+  if (routeWhenOpened !== pathname) {
+    setRouteWhenOpened(pathname);
+    setOpen(false);
+  }
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";

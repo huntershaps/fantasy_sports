@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/brand";
+import { BASE_PATH } from "@/lib/paths";
 
 export const metadata: Metadata = { title: "Sign out" };
 
@@ -19,7 +20,7 @@ export default function SignOutPage() {
         <form
           action={async () => {
             "use server";
-            await signOut({ redirectTo: "/" });
+            await signOut({ redirectTo: BASE_PATH });
           }}
           className="mt-7 space-y-3"
         >

@@ -13,6 +13,7 @@ export default async function ScheduleRedirect() {
 
   if (leagues.length > 0) {
     const league = leagues[0];
+    // Plain path: redirect() applies basePath itself.
     redirect(
       league.currentSeasonYear
         ? `/league/${league.slug}/schedule?season=${league.currentSeasonYear}`

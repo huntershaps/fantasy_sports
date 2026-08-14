@@ -83,7 +83,7 @@ export const getViewContext = cache(async (): Promise<ViewContext | null> => {
 
 export async function requireUser(): Promise<SessionUser> {
   const actor = await getActor();
-  if (!actor) redirect("/login");
+  if (!actor) redirect("/login"); // plain: redirect() applies basePath
   return actor;
 }
 

@@ -67,7 +67,15 @@ Start the dev server:
 pnpm dev
 ```
 
-Sign in with `hunter@sflinsider.com` / `museum2026!`.
+The seed prints the sign-in details when it finishes. No password is stored in
+this repository — set `SEED_PASSWORD` to choose one, or let the seed generate a
+random password and copy it from its output.
+
+If you have lost it, mint a reset link instead of re-seeding:
+
+```bash
+pnpm exec tsx scripts/reset-link.mts
+```
 
 > **The seeded leagues are fictional.** They exist so the UI can be built and
 > tested against realistic shapes. They are dev-database only, never committed,

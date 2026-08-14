@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { requireViewContext } from "@/lib/session";
 import { getPlayerDossier, search } from "@/lib/queries/search";
+import { withBase } from "@/lib/paths";
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -36,7 +37,10 @@ export default async function SearchPage({
     <PageContainer className="py-6">
       <PageHeader label="Everything, everywhere" title="Search" />
 
-      <form action="/search" className="mb-8 flex gap-2">
+      {/* A raw form action is a plain URL — Next prefixes next/link and
+          redirect(), but not this — so it needs the base path explicitly.
+          Without it the form submits to /search and 404s. */}
+      <form action={withBase("/search")} className="mb-8 flex gap-2">
         <Input
           name="q"
           defaultValue={q}

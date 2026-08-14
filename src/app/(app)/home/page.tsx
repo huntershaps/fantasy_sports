@@ -109,7 +109,9 @@ export default async function HomePage() {
       <div className="grid gap-3 lg:grid-cols-2">
         <Section className="border-line bg-surface rounded-lg border">
           <div className="border-line flex items-center justify-between gap-3 border-b px-4 py-3">
-            <h2 className="label">This Week</h2>
+            {/* Not "This Week": the query takes the next N games involving the
+                viewer, which routinely spans more than one week. */}
+            <h2 className="label">Next Up</h2>
             <Link
               href="/schedule"
               className="text-muted hover:text-ink inline-flex items-center gap-1 text-xs"
@@ -119,22 +121,31 @@ export default async function HomePage() {
           </div>
           {upcoming.length > 0 ? (
             <ul className="divide-line divide-y">
-              {upcoming.flatMap((matchup) =>
-                [matchup.away, matchup.home].map((side) => (
-                  <li key={`${matchup.id}-${side.id}`}>
-                    <Link
-                      href={`/matchup/${matchup.id}`}
-                      className="hover:bg-surface-2 flex items-center gap-3 px-4 py-2.5 transition-colors"
-                    >
-                      <Crest name={side.name} src={side.logoUrl} size="md" shape="round" />
-                      <span className="min-w-0 flex-1 truncate text-sm">{side.name}</span>
-                      <span className="text-faint tnum shrink-0 text-sm">
-                        {matchup.isComplete ? formatPoints(side.score) : "—"}
-                      </span>
-                    </Link>
-                  </li>
-                )),
-              )}
+              {/* One link per matchup, with both sides inside it. Rendering a
+                  row per team lost the pairing entirely — four rows read as
+                  four unrelated teams rather than two games — and produced two
+                  links to the same destination. */}
+              {upcoming.map((matchup) => (
+                <li key={matchup.id}>
+                  <Link
+                    href={`/matchup/${matchup.id}`}
+                    className="hover:bg-surface-2 block px-4 py-3 transition-colors"
+                  >
+                    <p className="label mb-2">Week {matchup.week}</p>
+                    <div className="space-y-1.5">
+                      {[matchup.away, matchup.home].map((side) => (
+                        <div key={side.id} className="flex items-center gap-3">
+                          <Crest name={side.name} src={side.logoUrl} size="md" shape="round" />
+                          <span className="min-w-0 flex-1 truncate text-sm">{side.name}</span>
+                          <span className="text-faint tnum shrink-0 text-sm">
+                            {matchup.isComplete ? formatPoints(side.score) : "—"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </Link>
+                </li>
+              ))}
             </ul>
           ) : (
             <p className="text-muted px-4 py-6 text-sm">No upcoming matchups.</p>

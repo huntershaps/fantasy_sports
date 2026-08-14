@@ -4,13 +4,18 @@ import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { appUrl, isMailConfigured, passwordResetMessage, sendMail } from "@/lib/mail";
 
 export type ResetRequestState = {
   sent?: boolean;
   /** Development only: the link that would have been emailed. */
   devLink?: string;
+  /** False when no mail transport exists, so the UI can stop promising email. */
+  mailConfigured?: boolean;
   error?: string;
 };
+
+const TTL_MINUTES = 60;
 
 const hashToken = (token: string) =>
   createHash("sha256").update(token).digest("hex");
@@ -28,24 +33,37 @@ export async function requestPasswordReset(
   });
 
   // Always report success so this endpoint cannot be used to discover which
-  // email addresses have accounts.
-  if (!user || user.isDisabled) return { sent: true };
+  // email addresses have accounts. Whether mail is configured is a property of
+  // the deployment, not of the account, so reporting it leaks nothing.
+  if (!user || user.isDisabled) return { sent: true, mailConfigured: isMailConfigured() };
 
   const token = randomBytes(32).toString("base64url");
   await db.passwordResetToken.create({
     data: {
       userId: user.id,
       tokenHash: hashToken(token),
-      expires: new Date(Date.now() + 60 * 60 * 1000),
+      expires: new Date(Date.now() + TTL_MINUTES * 60 * 1000),
     },
   });
 
-  // No mail transport is configured yet. In development the link is returned
-  // so the flow is testable; in production it must be emailed instead.
-  const link = `/reset-password?token=${token}`;
-  return process.env.NODE_ENV === "development"
-    ? { sent: true, devLink: link }
-    : { sent: true };
+  // Plain path: this is rendered through next/link, which prefixes basePath.
+  const path = `/reset-password?token=${token}`;
+  const delivered = await sendMail(
+    passwordResetMessage(email.data.toLowerCase(), `${appUrl()}${path}`, TTL_MINUTES),
+  );
+
+  // With no transport the link cannot be shown on screen in production —
+  // that would let anyone reset anyone's password — so an operator mints one
+  // with `pnpm exec tsx scripts/reset-link.mts <email>` instead. In
+  // development it is returned so the flow stays testable without SMTP.
+  // Report whether the deployment *has* a transport, never whether this
+  // particular send succeeded — the latter differs between a real and an
+  // unknown address, which is precisely the enumeration this endpoint avoids.
+  return {
+    sent: true,
+    mailConfigured: isMailConfigured(),
+    ...(process.env.NODE_ENV === "development" && !delivered ? { devLink: path } : {}),
+  };
 }
 
 export type ResetState = { error?: string; fieldErrors?: Record<string, string>; done?: boolean };
