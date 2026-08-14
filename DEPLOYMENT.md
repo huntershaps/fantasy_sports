@@ -97,8 +97,16 @@ Note the site's own `*.netlify.app` URL once it deploys.
 ### 3. Point the portfolio at it
 
 In `portfolio/netlify.toml`, replace `fantasy-sports-museum.netlify.app` with
-the URL from step 2, in both redirect blocks. Then deploy the portfolio site
-and attach `huntermshaps.com` to it.
+the URL from step 2, in **both** redirect blocks. That host is a placeholder
+and does not exist, so until it is replaced `/fantasy` serves a Netlify error
+page rather than the app. Netlify does not interpolate environment variables
+into `netlify.toml` redirects, so this cannot be supplied as a build variable —
+it has to be edited in the file.
+
+Then deploy the portfolio site. `huntermshaps.com` currently redirects to
+`huntershaps.netlify.app`; either is fine, since both are already in
+`allowedOrigins`. Promoting `huntermshaps.com` to the primary domain in
+Netlify's UI is a settings change, not a code one.
 
 ### 4. Make yourself the first Super Admin
 
