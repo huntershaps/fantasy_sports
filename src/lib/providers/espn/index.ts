@@ -11,7 +11,7 @@ import type {
   ProviderContext,
 } from "@/lib/providers/types";
 import { ProviderError } from "@/lib/providers/types";
-import type { TransactionType } from "@/generated/prisma/enums";
+import type { LineupSlot, TransactionType } from "@/generated/prisma/enums";
 import { authFromCredentials, fetchLeaguePayload } from "./client";
 import {
   BENCH_SLOT_IDS,
@@ -61,41 +61,101 @@ function teamName(team: EspnTeam): string {
 }
 
 /**
- * Merges ESPN's two roster branches, with the matchup-period one authoritative.
+ * Joins ESPN's two roster branches. Neither one is sufficient alone.
  *
- * `rosterForMatchupPeriod` is the record of who actually counted that week.
- * `rosterForCurrentScoringPeriod` is the roster as it stands, which is where
- * the bench comes from — and that is the catch: for a week already played it
- * describes the roster *now*, not then.
+ * Verified against a real week of this league:
  *
- * Choosing whichever list was longer therefore silently lost players. The
- * current roster is almost always longer, because it includes the bench, so it
- * won nearly every time — and any starter dropped later in the season was
- * simply absent from the week they played in. In this league that removed a
- * kicker from 36 of 138 team-weeks, each time leaving the team's stored
- * starters a field goal short of its own recorded score.
+ *   rosterForMatchupPeriod        9 entries — exactly the starters. Their
+ *                                 applied points sum to the side's totalPoints
+ *                                 to the cent. But every lineupSlotId is 0, so
+ *                                 it cannot say which slot anyone filled.
+ *   rosterForCurrentScoringPeriod 17 entries — the whole roster with real
+ *                                 lineupSlotIds, but as it stands today, not
+ *                                 as it stood that week.
  *
- * So: take the matchup period as the truth for who started and what they
- * scored, then add anyone else from the current roster as bench. Those bench
- * entries are approximate by nature — they are who is on the roster now — but
- * they are additive, and the starters always reconcile with the final score.
+ * So one branch knows who counted and for how much; the other knows the slots.
+ * Reading either on its own goes wrong in a different direction: trusting the
+ * current roster loses any starter dropped since (a kicker vanished from 36
+ * team-weeks that way), while trusting the matchup roster's slot ids files
+ * every starter — kickers and defences included — under QB.
+ *
+ * Starters therefore come from the matchup period, and their slot is looked up
+ * in the current roster by player. A starter who has since been dropped or
+ * benched has no usable slot there, so it is inferred from their position —
+ * approximate, but it keeps them counted, which is what the score depends on.
  */
 function lineupFor(side: EspnMatchupSide | undefined): NormalizedLineupSlot[] {
-  const matchupEntries = side?.rosterForMatchupPeriod?.entries ?? [];
-  const currentEntries = side?.rosterForCurrentScoringPeriod?.entries ?? [];
+  const counted = side?.rosterForMatchupPeriod?.entries ?? [];
+  const roster = side?.rosterForCurrentScoringPeriod?.entries ?? [];
 
-  // Some seasons only populate one branch; with no matchup roster there is
-  // nothing authoritative to anchor to, so the current roster is all there is.
-  if (matchupEntries.length === 0) return lineupFrom(currentEntries);
+  // Nothing authoritative to anchor to; the current roster is all there is.
+  if (counted.length === 0) return lineupFrom(roster);
 
-  const played = lineupFrom(matchupEntries);
-  const alreadyCounted = new Set(played.map((slot) => slot.providerPlayerId));
+  const slotIdByPlayer = new Map<string, number>();
+  for (const entry of roster) {
+    const id = entryPlayerId(entry);
+    if (id !== undefined) slotIdByPlayer.set(id, num(entry.lineupSlotId, 20));
+  }
 
-  const benched = lineupFrom(currentEntries)
-    .filter((slot) => !alreadyCounted.has(slot.providerPlayerId))
-    .map((slot) => ({ ...slot, slot: "BENCH" as const, isStarter: false }));
+  const lineup: NormalizedLineupSlot[] = [];
+  const started = new Set<string>();
 
-  return [...played, ...benched];
+  for (const entry of counted) {
+    const id = entryPlayerId(entry);
+    if (id === undefined) continue;
+    started.add(id);
+
+    const slotId = slotIdByPlayer.get(id);
+    const hasRealSlot = slotId !== undefined && !BENCH_SLOT_IDS.has(slotId);
+
+    lineup.push({
+      providerPlayerId: id,
+      slot: hasRealSlot
+        ? (LINEUP_SLOT_BY_ID[slotId] ?? slotFromPosition(entry))
+        : slotFromPosition(entry),
+      isStarter: true,
+      points: round2(num(entry.playerPoolEntry?.appliedStatTotal)),
+      projectedPoints: null,
+    });
+  }
+
+  for (const entry of roster) {
+    const id = entryPlayerId(entry);
+    if (id === undefined || started.has(id)) continue;
+    lineup.push({
+      providerPlayerId: id,
+      slot: num(entry.lineupSlotId, 20) === 21 ? "IR" : "BENCH",
+      isStarter: false,
+      points: round2(num(entry.playerPoolEntry?.appliedStatTotal)),
+      projectedPoints: null,
+    });
+  }
+
+  return lineup;
+}
+
+function entryPlayerId(entry: EspnRosterEntry): string | undefined {
+  const id = entry.playerId ?? entry.playerPoolEntry?.player?.id;
+  return id === undefined ? undefined : String(id);
+}
+
+/** Last resort for a starter the current roster can no longer place. */
+function slotFromPosition(entry: EspnRosterEntry): LineupSlot {
+  const position = POSITION_BY_ID[num(entry.playerPoolEntry?.player?.defaultPositionId, -1)];
+  switch (position) {
+    case "QB":
+    case "RB":
+    case "WR":
+    case "TE":
+    case "K":
+    case "DST":
+    case "DL":
+    case "LB":
+    case "DB":
+      return position;
+    default:
+      return "FLEX";
+  }
 }
 
 function lineupFrom(entries: EspnRosterEntry[] | undefined): NormalizedLineupSlot[] {
