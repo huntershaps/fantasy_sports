@@ -284,8 +284,13 @@ export const espnProvider: FantasyProvider = {
           winner: decided ? (winner as "HOME" | "AWAY" | "TIE") : null,
           isComplete: decided,
           playedOn: approximateWeekDate(seasonYear, week),
-          homeLineup: lineupFor(item.home),
-          awayLineup: lineupFor(item.away),
+          // A game that has not been played has no lineup. ESPN still returns
+          // a roster for it — the roster as it stands today — and storing that
+          // against a future matchup renders it as a set lineup where every
+          // player scored 0.00, which is indistinguishable from a fabricated
+          // result. An upcoming week is left empty until it is actually played.
+          homeLineup: decided ? lineupFor(item.home) : [],
+          awayLineup: decided ? lineupFor(item.away) : [],
         },
       ];
     });
