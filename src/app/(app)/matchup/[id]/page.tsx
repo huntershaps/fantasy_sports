@@ -147,8 +147,8 @@ export default async function MatchupPage({
         </div>
       </div>
 
+      {/* Margin and combined only mean something once the game is final. */}
       {matchup.isComplete ? (
-        <>
           <dl className="border-line grid grid-cols-2 gap-x-8 gap-y-4 border-b py-4 sm:grid-cols-4">
             <Figure label="Margin" value={formatPoints(Math.abs(homeScore - awayScore))} />
             <Figure label="Combined" value={formatPoints(homeScore + awayScore)} />
@@ -163,9 +163,14 @@ export default async function MatchupPage({
               sub={bottom?.player.fullName}
             />
           </dl>
+      ) : null}
 
+      {/* Rosters are shown whenever they exist. Gating this on `isComplete`
+          hid the lineups for games already in progress, which is exactly when
+          you most want to look at them. */}
+      {matchup.players.length > 0 ? (
           <Section className="mt-8">
-            <SectionHeader label="Box score" rule={false} />
+            <SectionHeader label={matchup.isComplete ? "Box score" : "Lineups"} rule={false} />
             <div className="grid gap-x-10 gap-y-8 lg:grid-cols-2">
               {sides.map((side) => (
                 <div key={side.team.id}>
@@ -226,9 +231,12 @@ export default async function MatchupPage({
               ))}
             </div>
           </Section>
-        </>
       ) : (
-        <p className="text-muted py-8 text-sm">This matchup has not been played yet.</p>
+        <p className="text-muted py-8 text-sm">
+          {matchup.isComplete
+            ? "No player-level detail was imported for this matchup."
+            : "This matchup has not been played yet, and no lineups have been set."}
+        </p>
       )}
     </PageContainer>
   );

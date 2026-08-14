@@ -16,9 +16,14 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-dvh flex-col">
       <header className="border-line bg-surface/80 sticky top-0 z-30 border-b backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" className="rounded-lg">
-            <Wordmark />
-          </Link>
+          <div className="flex min-w-0 items-center gap-5">
+            <Link href="/" className="rounded-lg">
+              <Wordmark />
+            </Link>
+            <Link href="/l" className="text-muted hover:text-ink hidden text-sm sm:block">
+              Browse archives
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button asChild variant="ghost" size="sm">

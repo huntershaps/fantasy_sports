@@ -38,6 +38,7 @@ export default auth((req) => {
     // Public league archives. The gate that matters is in the query itself —
     // every public query filters on `isPublic: true`, so letting the route
     // through here cannot expose a private league.
+    pathname === "/l" ||
     pathname.startsWith("/l/");
 
   // `clone()` keeps the query and origin but does NOT re-apply the basePath,

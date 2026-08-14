@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageContainer } from "@/components/shell/app-shell";
 import { LeagueHeader } from "@/components/league/league-header";
@@ -33,6 +34,22 @@ export default async function SchedulePage({ params, searchParams }: Props) {
   const weeks = [...new Set(matchups.map((m) => m.week))].sort((a, b) => a - b);
   const selectedWeek = weekParam ? Number(weekParam) : null;
   const visibleWeeks = selectedWeek ? weeks.filter((w) => w === selectedWeek) : weeks;
+
+  const playedCount = matchups.filter((m) => m.isComplete).length;
+
+  // The newest earlier season that actually has results to look at.
+  const lastPlayedSeason =
+    playedCount === 0
+      ? await db.season.findFirst({
+          where: {
+            leagueId: league.id,
+            year: { lt: season.year },
+            matchups: { some: { isComplete: true } },
+          },
+          orderBy: { year: "desc" },
+          select: { year: true },
+        })
+      : null;
 
   const myTeam = await db.fantasyTeam.findFirst({
     where: { seasonId: season.id, memberships: { some: { userId: viewer.id } } },
@@ -74,6 +91,22 @@ export default async function SchedulePage({ params, searchParams }: Props) {
           />
         </div>
 
+        {/* A season that has not started looks identical to one with results
+            until you click into a game and find it empty. Say so up front, and
+            point at the most recent season that does have box scores. */}
+        {matchups.length > 0 && playedCount === 0 && lastPlayedSeason ? (
+          <p className="border-line text-muted mb-6 rounded-md border border-dashed px-4 py-3 text-sm">
+            No games have been played in {season.year} yet.{" "}
+            <Link
+              href={`/league/${league.slug}/schedule?season=${lastPlayedSeason.year}`}
+              className="text-brand underline-offset-2 hover:underline"
+            >
+              See the {lastPlayedSeason.year} results
+            </Link>{" "}
+            for full box scores and lineups.
+          </p>
+        ) : null}
+
         {matchups.length === 0 ? (
           <EmptyState
             title="No schedule yet"
@@ -104,6 +137,7 @@ export default async function SchedulePage({ params, searchParams }: Props) {
                         key={matchup.id}
                         matchup={matchup}
                         highlightTeamId={myTeam?.id}
+                        showWeek={false}
                       />
                     ))}
                   </div>

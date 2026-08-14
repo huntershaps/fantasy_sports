@@ -10,38 +10,46 @@ const ROUND_LABEL: Record<string, string> = {
   CONSOLATION: "Consolation",
 };
 
-/** Two lines, aligned scores, winner carried by weight rather than colour.
- *  Reads as a results table entry, which is what it is. */
+/**
+ * Two lines, aligned scores, winner carried by weight rather than colour.
+ * Reads as a results table entry, which is what it is.
+ *
+ * `showWeek` is off on the schedule, where cards already sit under a "Week n"
+ * heading — repeating it on every card buried the team names under a row of
+ * chrome. It stays on wherever cards appear out of week order.
+ */
 export function MatchupCard({
   matchup,
   highlightTeamId,
+  showWeek = true,
   className,
 }: {
   matchup: MatchupSummary;
   highlightTeamId?: string | null;
+  showWeek?: boolean;
   className?: string;
 }) {
   const round = ROUND_LABEL[matchup.type];
+  const hasMeta = showWeek || Boolean(round);
 
   return (
     <Link
       href={`/matchup/${matchup.id}`}
+      aria-label={`Week ${matchup.week}: ${matchup.away.name} versus ${matchup.home.name}`}
       className={cn(
         "border-line hover:border-line-strong hover:bg-surface block rounded-md border px-3.5 py-3 transition-colors",
         matchup.type === "CHAMPIONSHIP" && "border-brand/35",
         className,
       )}
     >
-      <div className="text-faint mb-2 flex items-baseline justify-between gap-2 text-xs">
-        <span className="label">Week {matchup.week}</span>
-        {round ? (
-          <span className={cn(matchup.type === "CHAMPIONSHIP" && "text-brand")}>
-            {round}
-          </span>
-        ) : !matchup.isComplete ? (
-          <span>Upcoming</span>
-        ) : null}
-      </div>
+      {hasMeta ? (
+        <div className="text-faint mb-2 flex items-baseline justify-between gap-2 text-xs">
+          {showWeek ? <span className="label">Week {matchup.week}</span> : <span />}
+          {round ? (
+            <span className={cn(matchup.type === "CHAMPIONSHIP" && "text-brand")}>{round}</span>
+          ) : null}
+        </div>
+      ) : null}
 
       <TeamLine
         side={matchup.away}
@@ -49,6 +57,17 @@ export function MatchupCard({
         isComplete={matchup.isComplete}
         isMine={highlightTeamId === matchup.away.id}
       />
+
+      {/* An unplayed game has no scores to align, so a divider carries the
+          pairing instead of two empty dashes. */}
+      {!matchup.isComplete ? (
+        <div className="my-1 flex items-center gap-2" aria-hidden>
+          <span className="bg-line h-px flex-1" />
+          <span className="text-faint text-[0.625rem] tracking-[0.18em] uppercase">vs</span>
+          <span className="bg-line h-px flex-1" />
+        </div>
+      ) : null}
+
       <TeamLine
         side={matchup.home}
         isWinner={matchup.winnerTeamId === matchup.home.id}
@@ -89,14 +108,16 @@ function TeamLine({
       >
         {side.name}
       </span>
-      <span
-        className={cn(
-          "tnum shrink-0 text-sm",
-          isComplete && isWinner ? "text-ink font-semibold" : "text-muted",
-        )}
-      >
-        {isComplete ? formatPoints(side.score) : "—"}
-      </span>
+      {isComplete ? (
+        <span
+          className={cn(
+            "tnum shrink-0 text-sm",
+            isWinner ? "text-ink font-semibold" : "text-muted",
+          )}
+        >
+          {formatPoints(side.score)}
+        </span>
+      ) : null}
     </div>
   );
 }
