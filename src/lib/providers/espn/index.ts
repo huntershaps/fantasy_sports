@@ -176,7 +176,18 @@ function lineupFrom(entries: EspnRosterEntry[] | undefined): NormalizedLineupSlo
   });
 }
 
-function collectPlayers(payload: EspnLeaguePayload): NormalizedPlayer[] {
+/**
+ * Every player any payload mentions.
+ *
+ * This has to include the per-week box scores, not just the season payload.
+ * A player who was started in week 5 and dropped in week 6 appears in that
+ * week's roster and nowhere else — not on a team's current roster, not in the
+ * season schedule. Collecting only from the season payload left them without a
+ * Player row, and the writer skips any lineup slot it cannot resolve to one,
+ * so they were silently dropped on the way into the database even when the
+ * provider had returned them correctly.
+ */
+function collectPlayers(...payloads: EspnLeaguePayload[]): NormalizedPlayer[] {
   const byId = new Map<string, NormalizedPlayer>();
 
   const add = (entry: EspnRosterEntry | undefined) => {
@@ -193,13 +204,15 @@ function collectPlayers(payload: EspnLeaguePayload): NormalizedPlayer[] {
     });
   };
 
-  for (const team of payload.teams ?? []) {
-    for (const entry of team.roster?.entries ?? []) add(entry);
-  }
-  for (const item of payload.schedule ?? []) {
-    for (const side of [item.home, item.away]) {
-      for (const entry of side?.rosterForCurrentScoringPeriod?.entries ?? []) add(entry);
-      for (const entry of side?.rosterForMatchupPeriod?.entries ?? []) add(entry);
+  for (const payload of payloads) {
+    for (const team of payload.teams ?? []) {
+      for (const entry of team.roster?.entries ?? []) add(entry);
+    }
+    for (const item of payload.schedule ?? []) {
+      for (const side of [item.home, item.away]) {
+        for (const entry of side?.rosterForCurrentScoringPeriod?.entries ?? []) add(entry);
+        for (const entry of side?.rosterForMatchupPeriod?.entries ?? []) add(entry);
+      }
     }
   }
 
@@ -356,10 +369,15 @@ export const espnProvider: FantasyProvider = {
     });
 
     // Box scores need one request per scoring period, so they are opt-in.
+    // Kept so their players reach collectPlayers — a starter dropped later in
+    // the season exists only here.
+    const weekPayloads: EspnLeaguePayload[] = [];
     if (options.withBoxScores) {
       const playedWeeks = [
         ...new Set(matchups.filter((m) => m.isComplete).map((m) => m.week)),
       ].sort((a, b) => a - b);
+      const boxScoreFailures: string[] = [];
+      let sidesApplied = 0;
 
       for (const week of playedWeeks) {
         try {
@@ -370,6 +388,7 @@ export const espnProvider: FantasyProvider = {
             auth,
             { scoringPeriodId: week },
           );
+          weekPayloads.push(weekData);
 
           for (const item of weekData.schedule ?? []) {
             if (num(item.matchupPeriodId) !== week) continue;
@@ -382,12 +401,27 @@ export const espnProvider: FantasyProvider = {
             if (!target) continue;
             target.homeLineup = lineupFor(item.home);
             target.awayLineup = lineupFor(item.away);
+            sidesApplied += 2;
           }
-        } catch {
-          // One unavailable week must not sink the whole import; the season
-          // still lands and the sync logs the gap.
+        } catch (error) {
+          // One unavailable week must not sink the whole import. It must not
+          // pass unnoticed either: swallowing this silently is what let every
+          // week fall back to the season payload's current-roster lineup while
+          // the sync still reported SUCCESS.
+          boxScoreFailures.push(
+            `week ${week}: ${error instanceof Error ? error.message : "unknown error"}`,
+          );
         }
       }
+
+      // A box-score pass that silently applied to nothing is the difference
+      // between real lineups and the current roster stamped on every week.
+      console.log(
+        `[espn] ${seasonYear}: box scores requested for ${playedWeeks.length} weeks, ` +
+          `applied to ${sidesApplied} sides` +
+          (boxScoreFailures.length ? `, ${boxScoreFailures.length} failed` : ""),
+      );
+      for (const failure of boxScoreFailures) console.warn(`[espn]   ${failure}`);
     }
 
     // Before a draft happens ESPN still returns a full board of placeholder
@@ -527,7 +561,7 @@ export const espnProvider: FantasyProvider = {
           : [],
       ),
       teams,
-      players: collectPlayers(data),
+      players: collectPlayers(data, ...weekPayloads),
       matchups,
       draftPicks,
       transactions,

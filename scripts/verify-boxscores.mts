@@ -89,11 +89,23 @@ if (failures.length > 0) {
   }
   if (failures.length > 25) console.log(`  … and ${failures.length - 25} more`);
 
-  const missingK = failures.filter((f) => !f.slots.split(",").includes("K")).length;
-  if (missingK > 0) {
-    console.log(`\n${missingK} of these have no kicker among their starters.`);
+  const short = failures.filter((f) => f.recorded > f.summed).length;
+  const over = failures.length - short;
+
+  if (short > 0) {
+    console.log(
+      `\n${short} are SHORT — starters are missing. That is ours: re-run the` +
+        ` sync with box scores to rebuild them from ESPN.`,
+    );
   }
-  console.log("\nRe-run the sync with box scores to rebuild these from ESPN.");
+  if (over > 0) {
+    console.log(
+      `\n${over} are OVER — the roster ESPN returns adds up to more than the` +
+        ` score ESPN records for the same team. Re-syncing will not change it;` +
+        ` the two disagree at the source. Seen on abandoned teams, where a` +
+        ` scoring correction lands on the total but not on the box score.`,
+    );
+  }
 }
 
 await db.$disconnect();
