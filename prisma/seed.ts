@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -20,8 +21,17 @@ if (!connectionString) throw new Error("DATABASE_URL is not set");
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
-const SUPER_ADMIN_EMAIL = "hunter@sflinsider.com";
-const DEV_PASSWORD = "museum2026!";
+const SUPER_ADMIN_EMAIL = process.env.SEED_EMAIL ?? "hunter@sflinsider.com";
+
+/**
+ * No password is committed to this repository.
+ *
+ * Set SEED_PASSWORD to choose one; otherwise a random password is generated
+ * per run and printed once at the end. A literal here would be a working
+ * credential in a public repo for anyone who ever seeded a database and left
+ * it reachable.
+ */
+const DEV_PASSWORD = process.env.SEED_PASSWORD ?? randomBytes(12).toString("base64url");
 
 async function main() {
   const started = Date.now();

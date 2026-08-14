@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
+import { publicManagerNames } from "@/lib/privacy";
 
 /**
  * Queries for the signed-out public league page.
@@ -81,6 +82,16 @@ export const getPublicSeasonStandings = cache(async (leagueId: string, seasonId:
     },
   });
 
+  // Every manager who has ever been in this league, so the shortened form is
+  // decided against the whole roster and stays stable season to season.
+  const leagueRoster = await db.leagueMembership.findMany({
+    where: { leagueId },
+    select: { user: { select: { name: true } } },
+  });
+  const publicNames = publicManagerNames(
+    leagueRoster.map((m) => m.user?.name ?? "").filter(Boolean),
+  );
+
   return {
     season,
     rows: teams.map((team) => ({
@@ -96,7 +107,12 @@ export const getPublicSeasonStandings = cache(async (leagueId: string, seasonId:
       rank: team.regularSeasonRank,
       finalRank: team.finalRank,
       madePlayoffs: team.madePlayoffs,
-      manager: team.memberships[0]?.user?.name ?? null,
+      // First name only, disambiguated with a surname initial where two
+      // managers share one. Full names stay behind the login.
+      manager: (() => {
+        const full = team.memberships[0]?.user?.name;
+        return full ? (publicNames.get(full) ?? full.trim().split(/\s+/)[0]) : null;
+      })(),
     })),
   };
 });

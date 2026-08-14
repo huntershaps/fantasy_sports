@@ -16,9 +16,14 @@ const nextConfig: NextConfig = {
     // reproduces the same proxy hop in development.
     // PUBLIC_ORIGIN overrides the default without a code change, because
     // getting this list wrong breaks every form on the site.
+    // huntermshaps.com currently redirects to huntershaps.netlify.app, so the
+    // origin a browser actually sends is the netlify.app one. Both are listed:
+    // the custom domain is here so that promoting it to the primary domain
+    // later does not silently break every form.
     serverActions: {
       allowedOrigins: [
         ...(process.env.PUBLIC_ORIGIN ? [process.env.PUBLIC_ORIGIN] : []),
+        "huntershaps.netlify.app",
         "huntermshaps.com",
         "www.huntermshaps.com",
         "localhost:8000",

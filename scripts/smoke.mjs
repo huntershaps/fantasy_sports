@@ -2,7 +2,13 @@
  *  Run against a live dev server: node scripts/smoke.mjs */
 const BASE = process.env.SMOKE_BASE ?? "http://localhost:3000";
 const EMAIL = process.env.SMOKE_EMAIL ?? "hunter@sflinsider.com";
-const PASSWORD = process.env.SMOKE_PASSWORD ?? "museum2026!";
+const PASSWORD = process.env.SMOKE_PASSWORD;
+
+if (!PASSWORD) {
+  console.error("Set SMOKE_PASSWORD to the account's password before running this.");
+  console.error("  SMOKE_PASSWORD=... node scripts/smoke.mjs");
+  process.exit(1);
+}
 
 const jar = new Map();
 

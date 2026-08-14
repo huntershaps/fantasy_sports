@@ -1,17 +1,23 @@
-# Deploying to huntermshaps.com/fantasy
+# Deploying the app under the portfolio domain
 
 The app is served from a sub-path of the portfolio domain rather than a domain
 of its own. Two Netlify sites are involved:
 
 | Site           | Repo                     | Serves                                  |
 | -------------- | ------------------------ | --------------------------------------- |
-| Portfolio      | `huntershaps/portfolio`  | `huntermshaps.com` — static files        |
+| Portfolio      | `huntershaps/portfolio`  | `huntershaps.netlify.app` — static files |
 | Fantasy museum | `huntershaps/fantasy_sports` | the Next.js app, built at `/fantasy` |
 
+`huntermshaps.com` currently **redirects** to `huntershaps.netlify.app` rather
+than serving it, so the origin a browser ends up on — and therefore the origin
+that matters for cookies and for `allowedOrigins` — is the `netlify.app` one.
+Both are configured, so promoting `huntermshaps.com` to the primary domain in
+Netlify later will not break anything.
+
 The portfolio's `netlify.toml` proxies `/fantasy/*` to the fantasy site with a
-`200` (rewrite, not redirect), so the browser's address bar never leaves
-`huntermshaps.com`. That matters for more than looks: it is what keeps the
-Auth.js session cookie on the portfolio's own origin.
+`200` (rewrite, not redirect), so the browser's address bar never leaves the
+portfolio's origin. That matters for more than looks: it is what keeps the
+Auth.js session cookie on a single origin.
 
 ## What is already done in code
 
@@ -22,12 +28,18 @@ Auth.js session cookie on the portfolio's own origin.
   `withBase()`.
 - `src/auth.config.ts` deliberately leaves Auth.js on its default `/api/auth`.
 
-Two behaviours here were verified against a running build rather than assumed,
-because both are easy to get backwards:
+These were verified against a running build. The first one I originally had
+backwards, and it cost a broken Schedule and Standings page:
 
-1. **`redirect()` from `next/navigation` does not apply basePath.** Targets
-   have to be written as `withBase("/login")`.
-2. **Route handlers receive the path with basePath already stripped.** Auth.js
+1. **`redirect()` DOES apply basePath.** A probe route returned
+   `Location: /fantasy/leagues` for `redirect("/leagues")`, and
+   `/fantasy/fantasy/leagues` when the target was prefixed by hand. Pass it
+   plain paths. The same is true of `next/link`, `next/image` and the router.
+2. **`withBase()` is only for what nothing else prefixes**: `proxy.ts`, which
+   runs before basePath is stripped; Auth.js `pages` and `redirectTo`, which
+   Auth.js resolves against its own base URL; raw `<form action>` strings; and
+   URLs that leave the app entirely, like emails.
+3. **Route handlers receive the path with basePath already stripped.** Auth.js
    must therefore keep its default `basePath` of `/api/auth`; setting it to
    `/fantasy/api/auth` produces `UnknownAction: Cannot parse action`. The
    external prefix is communicated through `AUTH_URL` instead.
@@ -68,10 +80,10 @@ variables in the Netlify UI:
 | --------------------------- | ------------------------------------------------ |
 | `DATABASE_URL`              | the Neon connection string                        |
 | `AUTH_SECRET`               | `node scripts/gen-secrets.mjs` output             |
-| `AUTH_URL`                  | `https://huntermshaps.com/fantasy/api/auth`       |
+| `AUTH_URL`                  | `https://huntershaps.netlify.app/fantasy/api/auth` |
 | `AUTH_TRUST_HOST`           | `true`                                            |
 | `CREDENTIAL_ENCRYPTION_KEY` | from `gen-secrets.mjs`                            |
-| `PUBLIC_ORIGIN`             | `huntermshaps.com` — host only, no scheme         |
+| `PUBLIC_ORIGIN`             | `huntershaps.netlify.app` — host only, no scheme         |
 
 `AUTH_URL` and `AUTH_TRUST_HOST` are both required: the app sees Netlify's
 internal host through the proxy, and without these Auth.js builds callback URLs
@@ -95,7 +107,7 @@ roles from `/admin/users`. A fresh database therefore has no admin at all —
 the seed grants it in development, but the seed must never be run against real
 data. Bootstrap it by hand instead:
 
-1. **Register through the UI** at `https://huntermshaps.com/fantasy/register`.
+1. **Register through the UI** at `https://huntershaps.netlify.app/fantasy/register`.
    Do this the moment the site is live. There is no email verification, so the
    address is claimed first-come, and this repository is public.
 2. **Grant the role**, pointing `DATABASE_URL` at Neon for the one command:
@@ -117,7 +129,7 @@ create a token but cannot deliver it. The page says so rather than claiming a
 message is on its way. To get a link, an operator mints one:
 
 ```bash
-BASE_URL=https://huntermshaps.com DATABASE_URL="<neon-url>" pnpm exec tsx scripts/reset-link.mts <email>
+BASE_URL=https://huntershaps.netlify.app DATABASE_URL="<neon-url>" pnpm exec tsx scripts/reset-link.mts <email>
 ```
 
 It prints a single-use link valid for one hour and invalidates any earlier
@@ -131,8 +143,8 @@ based on whether either is present.
 ### 5. Check it end to end
 
 ```bash
-curl -sI https://huntermshaps.com/fantasy/login | head -1
-curl -s  https://huntermshaps.com/fantasy/api/auth/csrf
+curl -sI https://huntershaps.netlify.app/fantasy/login | head -1
+curl -s  https://huntershaps.netlify.app/fantasy/api/auth/csrf
 ```
 
 The first should be `200`, the second a JSON object containing `csrfToken`. If
