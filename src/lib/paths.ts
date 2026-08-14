@@ -2,13 +2,23 @@
  * The app is mounted under a sub-path of the portfolio domain
  * (huntermshaps.com/fantasy) so it does not need a domain of its own.
  *
- * Next.js prefixes `next/link`, `next/image` and the router automatically, but
- * three things it does NOT prefix, and which therefore have to go through the
- * helpers here:
+ * Next prefixes far more than it first appears. Verified against a running
+ * build, `redirect("/leagues")` emits `Location: /fantasy/leagues` — so
+ * `redirect()` DOES apply basePath, and passing it a prefixed path yields
+ * `/fantasy/fantasy/leagues` and a 404.
  *
- *   - `redirect()` / `permanentRedirect()` from `next/navigation`
- *   - Auth.js `pages` targets and its API route base
- *   - any hand-built URL string (fetch, Location headers, emails)
+ * So the rule is the opposite of what it looks like:
+ *
+ *   Use a PLAIN path (Next prefixes it for you):
+ *     - `redirect()` / `permanentRedirect()` from `next/navigation`
+ *     - `href` on `next/link`
+ *     - `next/image` src, the router, and anything else framework-owned
+ *
+ *   Use `withBase()` (nothing prefixes it for you):
+ *     - `proxy.ts`, which runs BEFORE the basePath is stripped
+ *     - Auth.js `pages` targets and `redirectTo`, which Auth.js resolves
+ *       against its own base URL rather than through Next
+ *     - any URL that leaves the app entirely — emails, scripts, logs
  *
  * Keep this in sync with `basePath` in next.config.ts. It is deliberately a
  * literal rather than an env var so it is available in the edge runtime and at
@@ -34,7 +44,11 @@ export function withBase(path: string): string {
  */
 export const AUTH_URL_PATH = withBase("/api/auth");
 
-/** Routes referenced from places Next cannot rewrite for us. */
+/**
+ * Routes for the places Next does NOT rewrite — Auth.js config and proxy.ts.
+ * Do not pass these to `redirect()` or `next/link`; those prefix on their own
+ * and would produce `/fantasy/fantasy/...`.
+ */
 export const ROUTES = {
   login: withBase("/login"),
   home: withBase("/home"),

@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireViewContext } from "@/lib/session";
 import { listLeagues } from "@/lib/queries/leagues";
-import { withBase } from "@/lib/paths";
 
 /** Top-level Schedule has no league of its own, so it forwards to the current
  *  season of the first league the viewer belongs to. */
@@ -14,10 +13,11 @@ export default async function ScheduleRedirect() {
 
   if (leagues.length > 0) {
     const league = leagues[0];
+    // Plain path: redirect() applies basePath itself.
     redirect(
       league.currentSeasonYear
-        ? withBase(`/league/${league.slug}/schedule?season=${league.currentSeasonYear}`)
-        : withBase(`/league/${league.slug}/schedule`),
+        ? `/league/${league.slug}/schedule?season=${league.currentSeasonYear}`
+        : `/league/${league.slug}/schedule`,
     );
   }
 

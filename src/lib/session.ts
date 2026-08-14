@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { forbidden, redirect, unauthorized } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { ROUTES } from "@/lib/paths";
 import type { UserRole } from "@/generated/prisma/enums";
 
 export type SessionUser = {
@@ -84,13 +83,13 @@ export const getViewContext = cache(async (): Promise<ViewContext | null> => {
 
 export async function requireUser(): Promise<SessionUser> {
   const actor = await getActor();
-  if (!actor) redirect(ROUTES.login);
+  if (!actor) redirect("/login"); // plain: redirect() applies basePath
   return actor;
 }
 
 export async function requireViewContext(): Promise<ViewContext> {
   const ctx = await getViewContext();
-  if (!ctx) redirect(ROUTES.login);
+  if (!ctx) redirect("/login");
   return ctx;
 }
 

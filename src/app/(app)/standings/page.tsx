@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireViewContext } from "@/lib/session";
 import { listLeagues } from "@/lib/queries/leagues";
-import { withBase } from "@/lib/paths";
 
 /** As with Schedule: forwards to the viewer's first league. */
 export default async function StandingsRedirect() {
@@ -15,8 +14,8 @@ export default async function StandingsRedirect() {
     const league = leagues[0];
     redirect(
       league.currentSeasonYear
-        ? withBase(`/league/${league.slug}/standings?season=${league.currentSeasonYear}`)
-        : withBase(`/league/${league.slug}/standings`),
+        ? `/league/${league.slug}/standings?season=${league.currentSeasonYear}`
+        : `/league/${league.slug}/standings`,
     );
   }
 

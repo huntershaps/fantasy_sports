@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { appUrl, isMailConfigured, passwordResetMessage, sendMail } from "@/lib/mail";
-import { withBase } from "@/lib/paths";
 
 export type ResetRequestState = {
   sent?: boolean;
@@ -47,7 +46,8 @@ export async function requestPasswordReset(
     },
   });
 
-  const path = withBase(`/reset-password?token=${token}`);
+  // Plain path: this is rendered through next/link, which prefixes basePath.
+  const path = `/reset-password?token=${token}`;
   const delivered = await sendMail(
     passwordResetMessage(email.data.toLowerCase(), `${appUrl()}${path}`, TTL_MINUTES),
   );
