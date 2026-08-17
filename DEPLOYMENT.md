@@ -42,7 +42,8 @@ backwards, and it cost a broken Schedule and Standings page:
 3. **Route handlers receive the path with basePath already stripped.** Auth.js
    must therefore keep its default `basePath` of `/api/auth`; setting it to
    `/fantasy/api/auth` produces `UnknownAction: Cannot parse action`. The
-   external prefix is communicated through `AUTH_URL` instead.
+   external origin comes from the forwarded host via `AUTH_TRUST_HOST`, not
+   from `AUTH_URL` — see below.
 
 ## Steps you need to do
 
@@ -80,14 +81,13 @@ variables in the Netlify UI:
 | --------------------------- | ------------------------------------------------ |
 | `DATABASE_URL`              | the Neon connection string                        |
 | `AUTH_SECRET`               | `node scripts/gen-secrets.mjs` output             |
-| ~~~~             | **Do not set.** See below.                        |
 | `AUTH_TRUST_HOST`           | `true`                                            |
 | `CREDENTIAL_ENCRYPTION_KEY` | from `gen-secrets.mjs`                            |
-| `PUBLIC_ORIGIN`             | `huntershaps.netlify.app` — host only, no scheme         |
+| `PUBLIC_ORIGIN`             | `huntershaps.netlify.app` — host only, no scheme  |
 
-`AUTH_URL` and `AUTH_TRUST_HOST` are both required: the app sees Netlify's
-internal host through the proxy, and without these Auth.js builds callback URLs
-against that internal host instead of your domain.
+Do **not** set `AUTH_URL`. `AUTH_TRUST_HOST=true` is what makes Auth.js trust
+the forwarded host, which is the correct arrangement behind a proxy; `AUTH_URL`
+only contradicts it. See "Do not set AUTH_URL" below for what that breaks.
 
 Leave `ESPN_*` and `YAHOO_*` unset until you have those credentials — the app
 runs without them, it just has nothing to import.
@@ -160,8 +160,8 @@ curl -sI https://huntershaps.netlify.app/fantasy/login | head -1
 curl -s  https://huntershaps.netlify.app/fantasy/api/auth/csrf
 ```
 
-The first should be `200`, the second a JSON object containing `csrfToken`. If
-the CSRF call returns `400`, `AUTH_URL` is wrong. Then register an account
+The first should be `200`, the second a JSON object containing `csrfToken`. A
+`400 Bad request.` from the CSRF call means `AUTH_URL` is set — unset it. Then register an account
 through the UI and confirm you stay signed in across a page load — that is the
 real test of whether cookies survive the proxy.
 
