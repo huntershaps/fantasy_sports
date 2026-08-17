@@ -80,7 +80,7 @@ variables in the Netlify UI:
 | --------------------------- | ------------------------------------------------ |
 | `DATABASE_URL`              | the Neon connection string                        |
 | `AUTH_SECRET`               | `node scripts/gen-secrets.mjs` output             |
-| `AUTH_URL`                  | `https://huntershaps.netlify.app/fantasy/api/auth` |
+| ~~~~             | **Do not set.** See below.                        |
 | `AUTH_TRUST_HOST`           | `true`                                            |
 | `CREDENTIAL_ENCRYPTION_KEY` | from `gen-secrets.mjs`                            |
 | `PUBLIC_ORIGIN`             | `huntershaps.netlify.app` — host only, no scheme         |
@@ -164,6 +164,20 @@ The first should be `200`, the second a JSON object containing `csrfToken`. If
 the CSRF call returns `400`, `AUTH_URL` is wrong. Then register an account
 through the UI and confirm you stay signed in across a page load — that is the
 real test of whether cookies survive the proxy.
+
+## Do not set AUTH_URL
+
+Setting it produced `400 Bad request.` from every auth endpoint, including
+`/fantasy/api/auth/csrf`, on the deployed site — while the same value worked
+locally.
+
+The path was not the problem. The host was: `AUTH_URL` named the public origin,
+but the app is served as `fantasy-sports-museum.netlify.app` behind a proxy, and
+Auth.js rejects a request whose host does not match the one it was given.
+
+`AUTH_TRUST_HOST=true` already tells Auth.js to trust the forwarded host, which
+is the correct arrangement behind a proxy. `AUTH_URL` then only contradicts it.
+Leave it unset and let the forwarded host win.
 
 ## Server Actions and the proxy
 
