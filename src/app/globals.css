@@ -10,35 +10,41 @@
      everything bold. Body weight is 400/500; 600 is a heading; 700 is rare.
    - Borders are structural, not decorative. They sit barely above the surface
      they separate so the eye reads content, not containers.
-   - One brand colour (brass). Semantic colours are reserved for genuine
+   - One brand colour (cyan). Semantic colours are reserved for genuine
      signal — a win, a loss, an error — and never used for emphasis.
    =========================================================================== */
 
 :root {
-  /* Surfaces — dark is the primary theme */
-  --c-base: #0b0f14;
-  --c-surface: #11161d;
-  --c-surface-2: #1a212a;
-  --c-surface-3: #222b36;
-  --c-line: #1e2630;
-  --c-line-strong: #2c3542;
+  /* Surfaces — deep navy, dark is the primary theme.
+     Named `canvas`, not `base`: a colour token called `base` makes Tailwind
+     generate `text-base` as a *colour* utility, shadowing its built-in
+     font-size one. Every `text-base` in the app then painted text the
+     background colour and vanished. */
+  --c-canvas: #0b132b;
+  --c-surface: #131d38;
+  --c-surface-2: #1c2541;
+  --c-surface-3: #263159;
+  --c-line: #24304f;
+  --c-line-strong: #3a4870;
 
-  /* Text */
-  --c-text: #e4e7eb;
-  --c-text-2: #98a2b3;
-  --c-text-3: #6b7686;
-  --c-text-inverse: #0b0f14;
+  /* Text. Pale ice blue rather than pure white — full white on navy at this
+     size vibrates; this keeps the contrast without the glare. */
+  --c-text: #e0fbfc;
+  --c-text-2: #a8c0d4;
+  --c-text-3: #8ba3ba;
+  --c-text-inverse: #0b132b;
 
-  /* Brand: the gold of the crest. */
-  --c-brand: #f59e0b;
-  --c-brand-hi: #fbbf24;
-  --c-brand-dim: #7c4d05;
+  /* Brand: vivid cyan. */
+  --c-brand: #48cae4;
+  --c-brand-hi: #90e0ef;
+  --c-brand-dim: #1b4f5e;
 
-  /* Semantic */
-  --c-win: #22c55e;
-  --c-loss: #ef4444;
-  --c-info: #2d8cff;
-  --c-accent-2: #a78bfa;
+  /* Semantic. Retuned for navy: the previous green and red were mixed for a
+     neutral charcoal and turn muddy here. */
+  --c-win: #4ade80;
+  --c-loss: #ff7b7b;
+  --c-info: #7cb0ff;
+  --c-accent-2: #c4b5fd;
 
   /* Per-league identity, overridden inline on league routes */
   --c-league: var(--c-brand);
@@ -49,33 +55,35 @@
 }
 
 .light {
-  --c-base: #f6f5f2;
+  --c-canvas: #f2f6f9;
   --c-surface: #ffffff;
-  --c-surface-2: #faf9f6;
-  --c-surface-3: #f0eee9;
-  --c-line: #e4e1da;
-  --c-line-strong: #cfcbc1;
+  --c-surface-2: #f7fafc;
+  --c-surface-3: #e9eff5;
+  --c-line: #dbe4ec;
+  --c-line-strong: #bcccdc;
 
-  --c-text: #14161a;
-  --c-text-2: #5c6169;
-  --c-text-3: #868b94;
+  --c-text: #0b132b;
+  --c-text-2: #47566d;
+  --c-text-3: #61728a;
   --c-text-inverse: #ffffff;
 
-  --c-brand: #8a6d12;
-  --c-brand-hi: #a8850f;
-  --c-brand-dim: #d8cfa8;
+  /* Cyan is too light to read on white, so light mode uses the same hue
+     darkened rather than a different colour. */
+  --c-brand: #0e7490;
+  --c-brand-hi: #0c637b;
+  --c-brand-dim: #b3e4ef;
 
-  --c-win: #2f7a45;
-  --c-loss: #a83a32;
-  --c-info: #2f63a8;
-  --c-accent-2: #6b4f96;
+  --c-win: #1b7a4b;
+  --c-loss: #b3352e;
+  --c-info: #245ea8;
+  --c-accent-2: #6247aa;
 
   --shadow-1: 0 1px 2px rgb(20 22 26 / 0.06), 0 4px 12px -8px rgb(20 22 26 / 0.18);
   --shadow-2: 0 2px 6px rgb(20 22 26 / 0.08), 0 16px 32px -18px rgb(20 22 26 / 0.22);
 }
 
 @theme inline {
-  --color-base: var(--c-base);
+  --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
   --color-surface-2: var(--c-surface-2);
   --color-surface-3: var(--c-surface-3);
@@ -147,7 +155,7 @@
   }
 
   body {
-    background-color: var(--c-base);
+    background-color: var(--c-canvas);
     color: var(--c-text);
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-size: 0.875rem;
@@ -192,7 +200,7 @@
   ::-webkit-scrollbar-thumb {
     background: var(--c-line-strong);
     border-radius: 99px;
-    border: 4px solid var(--c-base);
+    border: 4px solid var(--c-canvas);
   }
   ::-webkit-scrollbar-thumb:hover {
     background: var(--c-text-3);

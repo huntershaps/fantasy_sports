@@ -138,7 +138,7 @@ export default async function MemoriesPage({
             {[...byYear.entries()].map(([year, entries]) => (
               <Section key={year}>
                 {/* Year as a running head, sticky so the reader keeps their place. */}
-                <div className="border-line bg-base sticky top-12 z-10 mb-1 border-t py-2">
+                <div className="border-line bg-canvas sticky top-12 z-10 mb-1 border-t py-2">
                   <h2 className="figure-num text-muted text-sm">{year}</h2>
                 </div>
                 <div>

@@ -10,7 +10,7 @@ import type { SessionUser } from "@/lib/session";
  *  navigation lives in the sidebar and the page owns its own title. */
 export function Topbar({ user }: { user: SessionUser }) {
   return (
-    <header className="border-line bg-base/90 sticky top-0 z-30 flex h-12 items-center gap-3 border-b px-4 backdrop-blur-md sm:px-6">
+    <header className="border-line bg-canvas/90 sticky top-0 z-30 flex h-12 items-center gap-3 border-b px-4 backdrop-blur-md sm:px-6">
       <Link href="/home" className="rounded-sm lg:hidden">
         <Wordmark compact />
       </Link>
