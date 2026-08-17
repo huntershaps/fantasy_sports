@@ -161,7 +161,8 @@ curl -s  https://huntershaps.netlify.app/fantasy/api/auth/csrf
 ```
 
 The first should be `200`, the second a JSON object containing `csrfToken`. A
-`400 Bad request.` from the CSRF call means `AUTH_URL` is set — unset it. Then register an account
+`400 Bad request.` from the CSRF call means `AUTH_URL` has a path on it — it
+must be the origin only. Then sign in
 through the UI and confirm you stay signed in across a page load — that is the
 real test of whether cookies survive the proxy.
 
