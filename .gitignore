@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Real people's names mapped to their teams — never commit this.
 scripts/managers.local.json
+
+# Netlify personal access token, used for CLI deploys
+.netlify-token.local

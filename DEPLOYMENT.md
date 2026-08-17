@@ -110,23 +110,28 @@ Netlify's UI is a settings change, not a code one.
 
 ### 4. Make yourself the first Super Admin
 
-Registration always creates a plain `USER`, and only a `SUPER_ADMIN` can change
-roles from `/admin/users`. A fresh database therefore has no admin at all —
-the seed grants it in development, but the seed must never be run against real
-data. Bootstrap it by hand instead:
+**Already done if the database was seeded by `copy-db.mts`.** That copies the
+`User` table, so the existing account — role and password hash included — is
+already in Neon. Sign in with the password you already use; there is nothing to
+register and no role to grant.
+
+Verify with:
+
+```bash
+DATABASE_URL="<neon-url>" pnpm exec tsx scripts/grant-role.mts
+```
+
+It reports `already SUPER_ADMIN` and changes nothing when the role is set.
+
+For a genuinely fresh database, the bootstrap matters, because registration
+always creates a plain `USER` and only a `SUPER_ADMIN` can change roles from
+`/admin/users` — so nobody could ever become the first one:
 
 1. **Register through the UI** at `https://huntershaps.netlify.app/fantasy/register`.
-   Do this the moment the site is live. There is no email verification, so the
-   address is claimed first-come, and this repository is public.
-2. **Grant the role**, pointing `DATABASE_URL` at Neon for the one command:
-
-   ```bash
-   DATABASE_URL="<neon-url>" pnpm exec tsx scripts/grant-role.mts
-   ```
-
-   It defaults to `hunter@sflinsider.com` and `SUPER_ADMIN`; both can be passed
-   as arguments. It only ever promotes an account that already exists — it
-   never creates one, so no password passes through a terminal.
+   There is no email verification, so the address is claimed first-come.
+2. **Grant the role** with the command above. It only ever promotes an account
+   that already exists — it never creates one, so no password passes through a
+   terminal.
 
 From then on every other role change happens in `/admin/users`.
 
