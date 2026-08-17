@@ -1,0 +1,313 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "/fantasy",
+  "redirects": [
+    {
+      "source": "/fantasy/",
+      "destination": "/fantasy",
+      "basePath": false,
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^/fantasy/$"
+    },
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/auth/[...nextauth]",
+      "regex": "^/api/auth/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPnextauth": "nxtPnextauth"
+      },
+      "namedRegex": "^/api/auth/(?<nxtPnextauth>.+?)(?:/)?$"
+    },
+    {
+      "page": "/awards/[id]",
+      "regex": "^/awards/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/awards/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/l/[slug]",
+      "regex": "^/l/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/l/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/league/[slug]",
+      "regex": "^/league/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/league/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/league/[slug]/schedule",
+      "regex": "^/league/([^/]+?)/schedule(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/league/(?<nxtPslug>[^/]+?)/schedule(?:/)?$"
+    },
+    {
+      "page": "/league/[slug]/standings",
+      "regex": "^/league/([^/]+?)/standings(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/league/(?<nxtPslug>[^/]+?)/standings(?:/)?$"
+    },
+    {
+      "page": "/matchup/[id]",
+      "regex": "^/matchup/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/matchup/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/memories/[id]",
+      "regex": "^/memories/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/memories/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/profile/[id]",
+      "regex": "^/profile/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/profile/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/admin/awards",
+      "regex": "^/admin/awards(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/awards(?:/)?$"
+    },
+    {
+      "page": "/admin/data",
+      "regex": "^/admin/data(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/data(?:/)?$"
+    },
+    {
+      "page": "/admin/leagues",
+      "regex": "^/admin/leagues(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/leagues(?:/)?$"
+    },
+    {
+      "page": "/admin/memories",
+      "regex": "^/admin/memories(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/memories(?:/)?$"
+    },
+    {
+      "page": "/admin/records",
+      "regex": "^/admin/records(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/records(?:/)?$"
+    },
+    {
+      "page": "/admin/seasons",
+      "regex": "^/admin/seasons(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/seasons(?:/)?$"
+    },
+    {
+      "page": "/admin/settings",
+      "regex": "^/admin/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/settings(?:/)?$"
+    },
+    {
+      "page": "/admin/sync",
+      "regex": "^/admin/sync(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/sync(?:/)?$"
+    },
+    {
+      "page": "/admin/users",
+      "regex": "^/admin/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/users(?:/)?$"
+    },
+    {
+      "page": "/awards",
+      "regex": "^/awards(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/awards(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/forgot-password",
+      "regex": "^/forgot\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/forgot\\-password(?:/)?$"
+    },
+    {
+      "page": "/history",
+      "regex": "^/history(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/history(?:/)?$"
+    },
+    {
+      "page": "/home",
+      "regex": "^/home(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/home(?:/)?$"
+    },
+    {
+      "page": "/l",
+      "regex": "^/l(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/l(?:/)?$"
+    },
+    {
+      "page": "/leagues",
+      "regex": "^/leagues(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/leagues(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/memories",
+      "regex": "^/memories(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/memories(?:/)?$"
+    },
+    {
+      "page": "/profile",
+      "regex": "^/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/profile(?:/)?$"
+    },
+    {
+      "page": "/records",
+      "regex": "^/records(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/records(?:/)?$"
+    },
+    {
+      "page": "/register",
+      "regex": "^/register(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/reset-password",
+      "regex": "^/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/reset\\-password(?:/)?$"
+    },
+    {
+      "page": "/schedule",
+      "regex": "^/schedule(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/schedule(?:/)?$"
+    },
+    {
+      "page": "/search",
+      "regex": "^/search(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/search(?:/)?$"
+    },
+    {
+      "page": "/signout",
+      "regex": "^/signout(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/signout(?:/)?$"
+    },
+    {
+      "page": "/standings",
+      "regex": "^/standings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/standings(?:/)?$"
+    },
+    {
+      "page": "/teams",
+      "regex": "^/teams(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/teams(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

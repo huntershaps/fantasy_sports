@@ -1,0 +1,46 @@
+headersOrigin = "config"
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[[plugins]]
+origin = "config"
+package = "@netlify/plugin-nextjs"
+
+[plugins.inputs]
+
+[build]
+publish = "C:\\Users\\15613\\dev\\fantasy_sports\\.next"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "pnpm prisma generate && pnpm build"
+
+[build.environment]
+NODE_VERSION = "22"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[headers]]
+for = "/fantasy/api/auth/*"
+
+[headers.values]
+Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+for = "/*"
+
+[headers.values]
+X-Content-Type-Options = "nosniff"
+Referrer-Policy = "strict-origin-when-cross-origin"

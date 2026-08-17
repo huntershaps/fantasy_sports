@@ -1,0 +1,229 @@
+{
+  "app": {
+    "[project]/src/app/(app)/admin/awards/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/data/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/leagues/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/memories/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/records/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/seasons/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/settings/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/sync/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/admin/users/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/awards/[id]/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/awards/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/history/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/home/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/league/[slug]/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/league/[slug]/schedule/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/league/[slug]/standings/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/leagues/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/matchup/[id]/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/memories/[id]/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/memories/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/profile/[id]/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/profile/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/records/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/schedule/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/search/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/standings/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(app)/teams/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(auth)/forgot-password/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(auth)/login/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(auth)/register/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(auth)/reset-password/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(public)/l/[slug]/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/(public)/l/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/_not-found/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ],
+    "[project]/src/app/signout/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2",
+      "static/media/0c89a48fa5027cee-s.p.2cyn07wtgehh0.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70bc3e132a0a741e-s.p.3t6q91iet4nsy.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

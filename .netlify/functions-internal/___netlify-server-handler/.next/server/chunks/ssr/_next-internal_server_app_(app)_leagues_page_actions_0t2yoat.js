@@ -1,0 +1,3 @@
+module.exports=[74002,a=>a.a(async(b,c)=>{try{var d=a.i(6070),e=b([d]);[d]=e.then?(await e)():e,a.s([]),c()}catch(a){c(a)}},!1),46090,a=>a.a(async(b,c)=>{try{var d=a.i(74002),e=a.i(6070),f=b([d,e]);[d,e]=f.then?(await f)():f,a.s(["006b8e45a15ce3b5ac417990552f5a36109b8cfa4b",()=>e.stopImpersonating,"406e5573b30cc046e061575137904af006bef55253",()=>e.startImpersonating]),c()}catch(a){c(a)}},!1)];
+
+//# sourceMappingURL=_next-internal_server_app_%28app%29_leagues_page_actions_0t2yoat.js.map

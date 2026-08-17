@@ -10,8 +10,10 @@
   publish = ".next"
 
 [build.environment]
-  # Prisma 7 needs the binaries fetched for the Netlify build image.
-  PRISMA_CLI_BINARY_TARGETS = "native"
+  # Deliberately no PRISMA_CLI_BINARY_TARGETS. This project uses the
+  # @prisma/adapter-pg driver adapter, so Prisma 7 ships no query engine binary
+  # at all — setting a binary target makes `prisma generate` fail outright with
+  # "Unknown binaryTarget native and no custom engine files were provided".
   NODE_VERSION = "22"
 
 [[plugins]]
