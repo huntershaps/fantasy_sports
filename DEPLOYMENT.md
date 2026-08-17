@@ -81,13 +81,13 @@ variables in the Netlify UI:
 | --------------------------- | ------------------------------------------------ |
 | `DATABASE_URL`              | the Neon connection string                        |
 | `AUTH_SECRET`               | `node scripts/gen-secrets.mjs` output             |
+| `AUTH_URL`                  | `https://huntershaps.netlify.app` — **origin only** |
 | `AUTH_TRUST_HOST`           | `true`                                            |
 | `CREDENTIAL_ENCRYPTION_KEY` | from `gen-secrets.mjs`                            |
 | `PUBLIC_ORIGIN`             | `huntershaps.netlify.app` — host only, no scheme  |
 
-Do **not** set `AUTH_URL`. `AUTH_TRUST_HOST=true` is what makes Auth.js trust
-the forwarded host, which is the correct arrangement behind a proxy; `AUTH_URL`
-only contradicts it. See "Do not set AUTH_URL" below for what that breaks.
+`AUTH_URL` must be the **origin only** — no path. See "AUTH_URL: origin only"
+below; both getting it wrong and omitting it break sign-in, in different ways.
 
 Leave `ESPN_*` and `YAHOO_*` unset until you have those credentials — the app
 runs without them, it just has nothing to import.
@@ -165,19 +165,33 @@ The first should be `200`, the second a JSON object containing `csrfToken`. A
 through the UI and confirm you stay signed in across a page load — that is the
 real test of whether cookies survive the proxy.
 
-## Do not set AUTH_URL
+## AUTH_URL: origin only
 
-Setting it produced `400 Bad request.` from every auth endpoint, including
-`/fantasy/api/auth/csrf`, on the deployed site — while the same value worked
-locally.
+Behind the proxy this has exactly one correct value, and both ways of getting
+it wrong fail differently:
 
-The path was not the problem. The host was: `AUTH_URL` named the public origin,
-but the app is served as `fantasy-sports-museum.netlify.app` behind a proxy, and
-Auth.js rejects a request whose host does not match the one it was given.
+| Value | Result |
+| ----- | ------ |
+| `https://…/fantasy/api/auth` | `400 Bad request.` from every auth endpoint |
+| unset | sign-in succeeds, then redirects to the app's own host |
+| `https://huntershaps.netlify.app` | correct |
 
-`AUTH_TRUST_HOST=true` already tells Auth.js to trust the forwarded host, which
-is the correct arrangement behind a proxy. `AUTH_URL` then only contradicts it.
-Leave it unset and let the forwarded host win.
+With a path, Auth.js takes it as its basePath and expects `/fantasy/api/auth`.
+Next strips the basePath before the handler runs, so the handler sees
+`/api/auth/…`, the two disagree, and every request is rejected.
+
+Unset, `AUTH_TRUST_HOST` alone is not enough: Netlify's proxy presents the
+app's own host, so Auth.js builds its redirect against
+`fantasy-sports-museum.netlify.app`. Sign-in issues a session cookie for the
+proxy origin and then sends the browser somewhere that cookie does not apply —
+so it looks like the sign-in failed, while the logs show it succeeding.
+
+The origin alone gives Auth.js the right host while leaving basePath at its
+default `/api/auth`, which is what the handler actually receives.
+
+Verified end to end against production: sign-in returns
+`302 -> https://huntershaps.netlify.app/fantasy/home`, and that page renders
+signed-in content with the session cookie.
 
 ## Server Actions and the proxy
 
