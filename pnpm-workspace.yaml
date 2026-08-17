@@ -1,4 +1,14 @@
-onlyBuiltDependencies:
-  - '@prisma/engines'
-  - prisma
-  - esbuild
+# Packages allowed to run install scripts.
+#
+# pnpm blocks postinstall scripts unless a package is allowed here. It only
+# warns when run interactively, but exits non-zero in CI — so a package missing
+# from this list fails the Netlify build at "Install dependencies" with nothing
+# more specific than exit code 1.
+#
+# pnpm 11 reads `allowBuilds`; the older `onlyBuiltDependencies` key is silently
+# ignored, which is why listing packages there changed nothing.
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  esbuild: true
+  unrs-resolver: true

@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The Prisma client is generated and partly minified. Linting it reports
+    // thousands of problems in code nobody writes or can fix, which buries any
+    // real finding in our own source.
+    "src/generated/**",
   ]),
 ]);
 
