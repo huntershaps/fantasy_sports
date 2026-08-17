@@ -12,10 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // The Prisma client is generated and partly minified. Linting it reports
-    // thousands of problems in code nobody writes or can fix, which buries any
-    // real finding in our own source.
+    // Generated or copied build output, none of it hand-written:
+    // src/generated is the Prisma client; .netlify is what the Netlify CLI
+    // leaves behind, and it contains a full copy of the Next build, which is
+    // what put 6487 problems in front of any real finding.
     "src/generated/**",
+    ".netlify/**",
   ]),
 ]);
 
