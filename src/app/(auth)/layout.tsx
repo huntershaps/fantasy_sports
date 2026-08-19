@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getPublicArchiveStats, formatCount } from "@/lib/queries/stats";
 
-export default function AuthLayout({ children }: LayoutProps<"/">) {
+export default async function AuthLayout({ children }: LayoutProps<"/">) {
+  // Real counts. These sit beside a sign-in form with no framing to mark them
+  // as illustrative, so invented figures read as this archive's actual size.
+  const stats = await getPublicArchiveStats();
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_minmax(0,520px)]">
       {/* Marketing panel. Hidden on mobile so the form gets the whole screen. */}
@@ -25,18 +29,24 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             </p>
           </div>
 
-          <dl className="grid grid-cols-3 gap-6">
-            {[
-              ["Seasons archived", "8"],
-              ["Matchups recorded", "1,482"],
-              ["Trades never forgiven", "37"],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <dt className="label mb-1.5">{label}</dt>
-                <dd className="figure-num text-brand text-3xl">{value}</dd>
-              </div>
-            ))}
-          </dl>
+          {stats.seasons > 0 ? (
+            <dl className="grid grid-cols-3 gap-6">
+              {[
+                ["Seasons archived", formatCount(stats.seasons)],
+                ["Matchups recorded", formatCount(stats.matchups)],
+                ["Trades never forgiven", formatCount(stats.trades)],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="label mb-1.5">{label}</dt>
+                  <dd className="figure-num text-brand text-3xl">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            // Nothing public to count yet. A row of zeros says less than the
+            // line the page already opens with, so the panel just ends here.
+            <div />
+          )}
         </div>
       </aside>
 

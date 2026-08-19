@@ -3,11 +3,13 @@ import { Wordmark } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getActor } from "@/lib/session";
+import { getPublicArchiveStats, formatCount } from "@/lib/queries/stats";
 
 /** Marketing surface. It is allowed larger type than the app, but it earns it
  *  with one statement — not a wall of feature cards. */
 export default async function LandingPage() {
   const actor = await getActor();
+  const stats = await getPublicArchiveStats();
 
   return (
     <div className="min-h-dvh">
@@ -81,25 +83,31 @@ export default async function LandingPage() {
           </p>
         </section>
 
-        {/* Framed as one league's archive, not as platform-wide totals — these
-            are illustrative figures, and unlabelled numbers on a landing page
-            read as a live count. */}
-        <section className="border-line border-t py-14">
-          <p className="label mb-6">What ten seasons of one league leaves behind</p>
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
-            {[
-              ["Seasons archived", "10"],
-              ["Matchups recorded", "832"],
-              ["Records tracked", "30"],
-              ["Trades never forgiven", "60"],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <dt className="label mb-1">{label}</dt>
-                <dd className="figure-num tnum text-2xl">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+        {/* Real counts from the public archives, not illustrative figures.
+            Unlabelled numbers on a landing page read as a live count, so they
+            had better be one. Hidden entirely while nothing is public — an
+            empty archive should say nothing rather than a row of zeros. */}
+        {stats.seasons > 0 ? (
+          <section className="border-line border-t py-14">
+            <p className="label mb-6">
+              What {stats.leagues === 1 ? "one league" : `${formatCount(stats.leagues)} leagues`}{" "}
+              {stats.leagues === 1 ? "has" : "have"} left behind so far
+            </p>
+            <dl className="grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
+              {[
+                ["Seasons archived", formatCount(stats.seasons)],
+                ["Matchups recorded", formatCount(stats.matchups)],
+                ["Records tracked", formatCount(stats.records)],
+                ["Trades never forgiven", formatCount(stats.trades)],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="label mb-1">{label}</dt>
+                  <dd className="figure-num tnum text-2xl">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ) : null}
 
         <section className="border-line border-t py-20 sm:py-24">
           <h2 className="max-w-2xl text-2xl leading-tight font-semibold text-balance sm:text-3xl">

@@ -49,8 +49,15 @@ function row(input: {
   };
 }
 
+export type LogoInventory = {
+  leagues: LeagueLogos[];
+  /** Managers are not scoped to a league — one person can play in several. */
+  managers: LogoRow[];
+  managersMissing: number;
+};
+
 /** Everything the admin logo screen edits, in one pass. */
-export async function getLogoInventory(): Promise<LeagueLogos[]> {
+export async function getLogoInventory(): Promise<LogoInventory> {
   const leagues = await db.league.findMany({
     orderBy: { name: "asc" },
     select: {
@@ -81,7 +88,17 @@ export async function getLogoInventory(): Promise<LeagueLogos[]> {
     },
   });
 
-  return leagues.map((league) => {
+  const users = await db.user.findMany({
+    where: { isDisabled: false },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, image: true },
+  });
+
+  const managers = users.map((user) =>
+    row({ id: user.id, name: user.name, logoUrl: user.image }),
+  );
+
+  const leagueRows = leagues.map((league) => {
     const seasons = league.seasons.map((season) => ({
       seasonId: season.id,
       year: season.year,
@@ -104,4 +121,10 @@ export async function getLogoInventory(): Promise<LeagueLogos[]> {
       missingCount,
     };
   });
+
+  return {
+    leagues: leagueRows,
+    managers,
+    managersMissing: managers.filter((m) => !m.logoUrl).length,
+  };
 }

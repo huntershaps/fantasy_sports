@@ -61,6 +61,13 @@ export function AwardCard({
         {award.recipientName ? (
           <p className="text-muted mt-1 truncate text-xs">{award.recipientName}</p>
         ) : null}
+        {/* The team the award was actually won with. A manager's team name
+            changes year to year, so "Bruno Cuadros" alone loses which side of
+            the archive this trophy belongs to. Held one step back from the
+            recipient so the plinth still reads as a name under a mark. */}
+        {award.teamName && award.teamName !== award.recipientName ? (
+          <p className="text-faint mt-0.5 truncate text-2xs">{award.teamName}</p>
+        ) : null}
       </div>
 
       <div className="border-line flex items-baseline justify-between gap-2 border-t px-3 py-2">
