@@ -87,7 +87,7 @@ export default async function LandingPage() {
             Unlabelled numbers on a landing page read as a live count, so they
             had better be one. Hidden entirely while nothing is public — an
             empty archive should say nothing rather than a row of zeros. */}
-        {stats.seasons > 0 ? (
+        {stats && stats.seasons > 0 ? (
           <section className="border-line border-t py-14">
             <p className="label mb-6">
               What {stats.leagues === 1 ? "one league" : `${formatCount(stats.leagues)} leagues`}{" "}

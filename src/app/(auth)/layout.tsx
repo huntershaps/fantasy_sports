@@ -29,7 +29,7 @@ export default async function AuthLayout({ children }: LayoutProps<"/">) {
             </p>
           </div>
 
-          {stats.seasons > 0 ? (
+          {stats && stats.seasons > 0 ? (
             <dl className="grid grid-cols-3 gap-6">
               {[
                 ["Seasons archived", formatCount(stats.seasons)],
@@ -64,3 +64,8 @@ export default async function AuthLayout({ children }: LayoutProps<"/">) {
     </div>
   );
 }
+
+// Rendered per request. Prerendering freezes these counts at build time, which
+// would put numbers on the page that only move when the site is redeployed —
+// the same problem as the invented ones they replaced.
+export const dynamic = "force-dynamic";

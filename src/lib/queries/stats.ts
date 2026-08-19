@@ -18,16 +18,32 @@ import { db } from "@/lib/db";
  * If that ever stops being the right trade, scope each count with
  * `league: { isPublic: true }` and the pages fall back to hiding the block.
  */
-export const getPublicArchiveStats = cache(async () => {
-  const [leagues, seasons, matchups, trades, records] = await Promise.all([
-    db.league.count(),
-    db.season.count(),
-    db.matchup.count({ where: { isComplete: true } }),
-    db.rosterTransaction.count({ where: { type: "TRADE" } }),
-    db.leagueRecord.count({ where: { isCurrent: true } }),
-  ]);
+export type ArchiveStats = {
+  leagues: number;
+  seasons: number;
+  matchups: number;
+  trades: number;
+  records: number;
+};
 
-  return { leagues, seasons, matchups, trades, records };
+export const getPublicArchiveStats = cache(async (): Promise<ArchiveStats | null> => {
+  try {
+    const [leagues, seasons, matchups, trades, records] = await Promise.all([
+      db.league.count(),
+      db.season.count(),
+      db.matchup.count({ where: { isComplete: true } }),
+      db.rosterTransaction.count({ where: { type: "TRADE" } }),
+      db.leagueRecord.count({ where: { isCurrent: true } }),
+    ]);
+
+    return { leagues, seasons, matchups, trades, records };
+  } catch {
+    // Null, not a throw. These numbers are decoration on the sign-in page, and
+    // sign-in is how someone recovers when things are broken — a database that
+    // is unreachable, or absent at build time in a preview environment, must
+    // not take the login form down with it. The callers hide the block.
+    return null;
+  }
 });
 
 /** Thousands separators, so 1482 reads as 1,482 in a headline figure. */
