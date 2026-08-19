@@ -47,6 +47,16 @@ export async function connectProvider(
 
   const { leagueId, provider, providerLeagueId } = parsed.data;
 
+  // An ESPN league id is always numeric. Checking here turns a pasted email or
+  // a copied URL into a message that says what is wrong, instead of a request
+  // to .../leagues/<whatever> that ESPN rejects with a bare 400.
+  if (provider === "ESPN" && !/^\d+$/.test(providerLeagueId)) {
+    return {
+      ok: false,
+      message: `"${providerLeagueId}" is not an ESPN league id. It is the number after ?leagueId= in your league URL, digits only.`,
+    };
+  }
+
   // Blank secret fields mean "leave what is stored alone", so an admin can
   // edit the league id without re-pasting cookies.
   const existing = await db.providerCredential.findUnique({ where: { leagueId } });
@@ -82,7 +92,13 @@ export async function connectProvider(
 }
 
 const importSchema = z.object({
-  providerLeagueId: z.string().trim().min(1, "Enter your ESPN league id"),
+  // Digits only — this route is ESPN-only, and a pasted email or full URL
+  // otherwise fails later as a bare 400 from ESPN.
+  providerLeagueId: z
+    .string()
+    .trim()
+    .min(1, "Enter your ESPN league id")
+    .regex(/^\d+$/, "An ESPN league id is digits only — the number after ?leagueId= in your league URL."),
   season: z.coerce.number().int().min(1990).max(2100),
   swid: z.string().trim().optional(),
   espnS2: z.string().trim().optional(),
