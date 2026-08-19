@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Database,
+  ImageIcon,
   Medal,
   RefreshCw,
   Shield,
@@ -25,6 +26,7 @@ const TOOLS = [
   { href: "/admin/awards", label: "Awards", icon: Trophy, blurb: "Award catalog and manual assignments." },
   { href: "/admin/memories", label: "Memories", icon: Sparkles, blurb: "Feature, hide, edit, or write memories." },
   { href: "/admin/records", label: "Records", icon: Medal, blurb: "Verify, correct, or override records." },
+  { href: "/admin/logos", label: "Logos", icon: ImageIcon, blurb: "Upload or replace crests ESPN cannot serve." },
   { href: "/admin/sync", label: "Data Sync", icon: RefreshCw, blurb: "Pull from ESPN and Yahoo, review errors." },
   { href: "/admin/data", label: "Data", icon: Database, blurb: "Rebuild derived data, import, and export." },
 ];

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Crest } from "@/components/ui/crest";
 import type { MatchupSummary } from "@/lib/queries/leagues";
 import { cn, formatPoints } from "@/lib/utils";
 
@@ -90,14 +91,21 @@ function TeamLine({
   isMine: boolean;
 }) {
   return (
-    <div className="flex items-baseline gap-2 py-0.5">
+    <div className="flex items-center gap-2 py-0.5">
       {/* A thin marker beats a filled row for showing the winner. */}
       <span
         aria-hidden
         className={cn(
-          "h-3 w-0.5 shrink-0 self-center rounded-full",
+          "h-3 w-0.5 shrink-0 rounded-full",
           isComplete && isWinner ? "bg-brand" : "bg-transparent",
         )}
+      />
+      <Crest
+        name={side.name}
+        src={side.logoUrl}
+        size="xs"
+        shape="round"
+        className={cn(isComplete && !isWinner && "opacity-70")}
       />
       <span
         className={cn(

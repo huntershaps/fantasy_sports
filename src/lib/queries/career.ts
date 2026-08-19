@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
+import { teamCrest } from "@/lib/images";
 
 export type CareerStats = {
   seasons: number;
@@ -127,6 +128,7 @@ export const getManagerTeams = cache(async (userId: string) => {
           league: { select: { id: true, name: true, slug: true, accentColor: true } },
         },
       },
+      franchise: { select: { logoUrl: true } },
       championOf: { select: { id: true } },
       runnerUpOf: { select: { id: true } },
     },
@@ -135,7 +137,7 @@ export const getManagerTeams = cache(async (userId: string) => {
   return teams.map((team) => ({
     id: team.id,
     name: team.name,
-    logoUrl: team.logoUrl,
+    logoUrl: teamCrest(team),
     wins: team.wins,
     losses: team.losses,
     ties: team.ties,

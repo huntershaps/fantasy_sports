@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageContainer } from "@/components/shell/app-shell";
 import { PageHeader, Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Crest } from "@/components/ui/crest";
 import { requireViewContext } from "@/lib/session";
 import { getLeagueRecords, listLeagues } from "@/lib/queries/leagues";
 import { cn } from "@/lib/utils";
@@ -95,6 +96,15 @@ export default async function RecordsPage({
                       record.holderUser?.name ??
                       "Unknown";
 
+                    // A record held by a team gets that team's crest; one held
+                    // by a manager gets theirs. A player record has no crest to
+                    // show, so it keeps the plain name.
+                    const crest = record.holderTeam
+                      ? { name: record.holderTeam.name, src: record.holderTeam.logoUrl }
+                      : record.holderUser
+                        ? { name: record.holderUser.name, src: record.holderUser.image }
+                        : null;
+
                     const content = (
                       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 py-3">
                         <span className="figure-num tnum text-brand w-24 shrink-0 text-xl">
@@ -104,12 +114,22 @@ export default async function RecordsPage({
                           <p className="text-ink text-sm font-medium">{record.label}</p>
                           <p className="text-muted text-xs">{record.description}</p>
                         </div>
-                        <div className="text-faint shrink-0 text-right text-xs">
+                        <div className="text-faint flex shrink-0 items-center gap-2 text-right text-xs">
+                          {crest ? (
+                            <Crest
+                              name={crest.name}
+                              src={crest.src}
+                              size="sm"
+                              shape="round"
+                            />
+                          ) : null}
+                          <div>
                           <p>{holder}</p>
                           <p className="tnum">
                             {dateFormat.format(record.occurredOn)}
                             {record.week ? ` · Wk ${record.week}` : ""}
                           </p>
+                          </div>
                         </div>
                       </div>
                     );

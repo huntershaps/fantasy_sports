@@ -39,7 +39,12 @@ export default auth((req) => {
     // every public query filters on `isPublic: true`, so letting the route
     // through here cannot expose a private league.
     pathname === "/l" ||
-    pathname.startsWith("/l/");
+    pathname.startsWith("/l/") ||
+    // Uploaded crests and profile pictures. These are the same images the
+    // public league page already renders to signed-out visitors, and each is
+    // addressed by an unguessable cuid, so gating them would break that page
+    // while protecting nothing.
+    pathname.startsWith("/api/images/");
 
   // `clone()` keeps the query and origin but does NOT re-apply the basePath,
   // so redirect targets are written with withBase().

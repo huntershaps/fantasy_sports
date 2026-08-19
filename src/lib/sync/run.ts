@@ -275,9 +275,17 @@ async function writeSeason(
         team.regularSeasonRank <= meta.playoffTeamCount,
     };
 
+    // Written outside the locked set on purpose: it is the record of what the
+    // provider currently says, which is what lets an admin revert an override
+    // without waiting for the next sync.
+    const providerLogo = { providerLogoUrl: team.logoUrl };
+
     if (existing) {
       const update = omitLocked(desired, existing.lockedFields);
-      await db.fantasyTeam.update({ where: { id: existing.id }, data: update });
+      await db.fantasyTeam.update({
+        where: { id: existing.id },
+        data: { ...update, ...providerLogo },
+      });
       teamIdByProvider.set(team.providerTeamId, existing.id);
       counter.updated++;
     } else {
@@ -288,6 +296,7 @@ async function writeSeason(
           providerTeamId: team.providerTeamId,
           source: "PROVIDER",
           ...desired,
+          ...providerLogo,
         },
       });
       teamIdByProvider.set(team.providerTeamId, created.id);

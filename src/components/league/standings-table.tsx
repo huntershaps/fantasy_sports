@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
+import { Crest } from "@/components/ui/crest";
 import type { StandingsRow } from "@/lib/queries/leagues";
 import { cn, formatPoints, formatRecord } from "@/lib/utils";
 
@@ -57,7 +58,8 @@ export function StandingsTable({
               >
                 <td className="text-faint tnum py-2.5">{row.rank || index + 1}</td>
                 <td className="py-2.5">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-center gap-2">
+                    <Crest name={row.name} src={row.logoUrl} size="sm" shape="round" />
                     <span className="text-ink truncate font-medium">{row.name}</span>
                     {championTeamId === row.id ? (
                       <Trophy className="text-brand size-3 shrink-0 self-center" />
@@ -114,6 +116,7 @@ export function StandingsTable({
               >
                 {rank}
               </span>
+              <Crest name={row.name} src={row.logoUrl} size="md" shape="round" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{row.name}</p>
                 <p className="text-faint truncate text-xs">

@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
     // the custom domain is here so that promoting it to the primary domain
     // later does not silently break every form.
     serverActions: {
+      // Logo uploads go through a Server Action, and the default cap is 1 MB.
+      // MAX_IMAGE_BYTES in src/lib/images.ts rejects anything over 2 MB with a
+      // readable message; this headroom is what lets that check run instead of
+      // the framework failing the request first with an opaque error.
+      bodySizeLimit: "4mb",
       allowedOrigins: [
         ...(process.env.PUBLIC_ORIGIN ? [process.env.PUBLIC_ORIGIN] : []),
         "huntershaps.netlify.app",
