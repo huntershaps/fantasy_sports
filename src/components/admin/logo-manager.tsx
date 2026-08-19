@@ -11,10 +11,12 @@ import { Crest } from "@/components/ui/crest";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/layout";
 import { IMAGE_ACCEPT_ATTRIBUTE } from "@/lib/images";
-import type { LeagueLogos, LogoRow } from "@/lib/queries/logos";
+import type { LogoInventory, LogoRow } from "@/lib/queries/logos";
 
-export function LogoManager({ leagues }: { leagues: LeagueLogos[] }) {
-  if (leagues.length === 0) {
+export function LogoManager({ inventory }: { inventory: LogoInventory }) {
+  const { leagues, managers, managersMissing } = inventory;
+
+  if (leagues.length === 0 && managers.length === 0) {
     return (
       <p className="text-muted text-sm">No leagues yet, so there is nothing to dress.</p>
     );
@@ -22,6 +24,34 @@ export function LogoManager({ leagues }: { leagues: LeagueLogos[] }) {
 
   return (
     <div className="space-y-12">
+      {managers.length > 0 ? (
+        <section>
+          <SectionHeader
+            label="People"
+            title="Managers"
+            action={
+              managersMissing > 0 ? (
+                <span className="text-faint text-xs">
+                  {managersMissing} without a picture
+                </span>
+              ) : (
+                <span className="text-win text-xs">Everyone has a picture</span>
+              )
+            }
+          />
+          <p className="text-faint mb-3 text-xs">
+            A manager&apos;s picture follows them across every league and season
+            they appear in. No provider supplies these, so nothing can overwrite
+            one once it is set.
+          </p>
+          <div className="space-y-2">
+            {managers.map((manager) => (
+              <LogoEditor key={manager.id} target="user" row={manager} shape="round" />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {leagues.map((league) => (
         <section key={league.id}>
           <SectionHeader
@@ -85,7 +115,7 @@ function LogoEditor({
   row,
   shape,
 }: {
-  target: "team" | "franchise" | "league";
+  target: "team" | "franchise" | "league" | "user";
   row: LogoRow;
   shape: "shield" | "round";
 }) {

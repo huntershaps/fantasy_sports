@@ -23,7 +23,7 @@ export type LogoActionState = {
 const LOGO_FIELD = "logoUrl";
 
 const schema = z.object({
-  target: z.enum(["team", "franchise", "league"]),
+  target: z.enum(["team", "franchise", "league", "user"]),
   targetId: z.string().min(1),
   mode: z.enum(["upload", "url", "clear", "revert"]),
   // Nullable, not just optional. `FormData.get` returns null for a field that
@@ -89,7 +89,7 @@ function withLock(current: string[], locked: boolean): string[] {
 }
 
 /**
- * Set, replace, or revert the crest on a team, franchise, or league.
+ * Set, replace, or revert the crest on a team, franchise, league, or manager.
  *
  * A team logo an admin sets here is pinned in `lockedFields`, so the next sync
  * leaves it alone. That matters most for the teams ESPN cannot serve at all:
@@ -169,7 +169,7 @@ export async function saveLogo(
       });
       if (!franchise) return fail("That franchise no longer exists.");
       await db.franchise.update({ where: { id: targetId }, data: { logoUrl: value } });
-    } else {
+    } else if (target === "league") {
       if (mode === "revert") return fail("A league crest has nothing to revert to.");
       const league = await db.league.findUnique({
         where: { id: targetId },
@@ -177,6 +177,14 @@ export async function saveLogo(
       });
       if (!league) return fail("That league no longer exists.");
       await db.league.update({ where: { id: targetId }, data: { logoUrl: value } });
+    } else {
+      // A manager's picture lives on User.image, not a logoUrl column, and no
+      // provider ever writes it — so there is nothing to lock and nothing to
+      // revert to.
+      if (mode === "revert") return fail("A profile picture has nothing to revert to.");
+      const user = await db.user.findUnique({ where: { id: targetId }, select: { id: true } });
+      if (!user) return fail("That manager no longer exists.");
+      await db.user.update({ where: { id: targetId }, data: { image: value } });
     }
   } catch {
     return fail("Saving that logo failed.");

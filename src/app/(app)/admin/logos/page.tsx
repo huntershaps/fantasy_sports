@@ -8,14 +8,14 @@ export const metadata: Metadata = { title: "Logos" };
 
 export default async function AdminLogosPage() {
   await requireRole("ADMIN");
-  const leagues = await getLogoInventory();
+  const inventory = await getLogoInventory();
 
   return (
     <AdminShell
       title="Logos"
       description="Every crest in the archive. Anything set here is pinned, so a sync will not overwrite it."
     >
-      <LogoManager leagues={leagues} />
+      <LogoManager inventory={inventory} />
     </AdminShell>
   );
 }

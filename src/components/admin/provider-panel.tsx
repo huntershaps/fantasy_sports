@@ -57,6 +57,10 @@ function ImportNewLeague() {
             id="new-league-id"
             name="providerLeagueId"
             placeholder="1893127963"
+            inputMode="numeric"
+            // Without this the browser autofills a saved email here, which
+            // then reaches ESPN as a league id and comes back as an opaque 400.
+            autoComplete="off"
             required
           />
         </Field>
@@ -158,6 +162,8 @@ function ManageExisting({ leagues }: { leagues: ProviderLeague[] }) {
             <Input
               id="providerLeagueId"
               name="providerLeagueId"
+              inputMode="numeric"
+              autoComplete="off"
               defaultValue={league.providerLeagueId ?? ""}
               placeholder="1893127963"
               required

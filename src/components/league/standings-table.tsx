@@ -120,7 +120,13 @@ export function StandingsTable({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{row.name}</p>
                 <p className="text-faint truncate text-xs">
-                  {row.manager?.name ?? "Unclaimed"}
+                  {/* The abbreviation is what survives when a long team name
+                      truncates on a narrow screen, so it leads here. */}
+                  {row.abbreviation ? (
+                    <span className="text-muted font-medium">{row.abbreviation}</span>
+                  ) : null}
+                  {row.abbreviation && row.manager ? " · " : null}
+                  {row.manager?.name ?? (row.abbreviation ? null : "Unclaimed")}
                 </p>
               </div>
               <div className="shrink-0 text-right">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageContainer } from "@/components/shell/app-shell";
 import { PageHeader, Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Crest } from "@/components/ui/crest";
 import { Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { requireViewContext } from "@/lib/session";
@@ -145,10 +146,20 @@ export default async function SearchPage({
                   <li key={hit.id}>
                     <Link
                       href={hit.href}
-                      className="hover:bg-surface -mx-3 block px-3 py-2.5 transition-colors"
+                      className="hover:bg-surface -mx-3 flex items-center gap-2.5 px-3 py-2.5 transition-colors"
                     >
-                      <p className="truncate text-sm font-medium">{hit.title}</p>
-                      <p className="text-faint truncate text-xs">{hit.subtitle}</p>
+                      {hit.crest !== undefined ? (
+                        <Crest
+                          name={hit.title}
+                          src={hit.crest}
+                          size="md"
+                          shape="round"
+                        />
+                      ) : null}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{hit.title}</span>
+                        <span className="text-faint block truncate text-xs">{hit.subtitle}</span>
+                      </span>
                     </Link>
                   </li>
                 ))}

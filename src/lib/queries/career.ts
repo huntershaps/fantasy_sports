@@ -162,8 +162,12 @@ export const getTeamForm = cache(async (teamId: string) => {
     where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] },
     orderBy: { week: "asc" },
     include: {
-      homeTeam: { select: { id: true, name: true } },
-      awayTeam: { select: { id: true, name: true } },
+      homeTeam: {
+        select: { id: true, name: true, logoUrl: true, franchise: { select: { logoUrl: true } } },
+      },
+      awayTeam: {
+        select: { id: true, name: true, logoUrl: true, franchise: { select: { logoUrl: true } } },
+      },
     },
   });
 
@@ -190,8 +194,11 @@ export const getTeamForm = cache(async (teamId: string) => {
     ? {
         id: upcoming.id,
         week: upcoming.week,
-        opponent:
-          upcoming.homeTeamId === teamId ? upcoming.awayTeam : upcoming.homeTeam,
+        opponent: (() => {
+          const other =
+            upcoming.homeTeamId === teamId ? upcoming.awayTeam : upcoming.homeTeam;
+          return { id: other.id, name: other.name, logoUrl: teamCrest(other) };
+        })(),
       }
     : null;
 
