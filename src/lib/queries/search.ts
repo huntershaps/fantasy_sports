@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { teamCrest } from "@/lib/images";
 import { accessibleLeagueIds, type SessionUser } from "@/lib/session";
 import { renderMemory } from "@/lib/memories/render";
 import { formatPoints, formatRecord } from "@/lib/utils";
@@ -9,6 +10,9 @@ export type SearchHit = {
   title: string;
   subtitle: string;
   href: string;
+  /** Crest to show beside the hit, where the row has an identity worth showing.
+   *  Null on players and memories, which are not owned by a team. */
+  crest?: string | null;
 };
 
 export type SearchResults = {
@@ -37,7 +41,12 @@ export async function search(
     db.user.findMany({
       where: { name: contains, isDisabled: false },
       take: 6,
-      select: { id: true, name: true, _count: { select: { teamMemberships: true } } },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        _count: { select: { teamMemberships: true } },
+      },
     }),
     db.fantasyTeam.findMany({
       where: { name: contains, ...seasonLeagueFilter },
@@ -46,6 +55,8 @@ export async function search(
       select: {
         id: true,
         name: true,
+        logoUrl: true,
+        franchise: { select: { logoUrl: true } },
         wins: true,
         losses: true,
         ties: true,
@@ -95,6 +106,7 @@ export async function search(
         title: m.name,
         subtitle: `${m._count.teamMemberships} season${m._count.teamMemberships === 1 ? "" : "s"}`,
         href: `/profile/${m.id}`,
+        crest: m.image,
       })),
     });
   }
@@ -108,6 +120,7 @@ export async function search(
         title: t.name,
         subtitle: `${t.season.year} · ${t.season.league.name} · ${formatRecord(t.wins, t.losses, t.ties)}`,
         href: `/league/${t.season.league.slug}?season=${t.season.year}`,
+        crest: teamCrest(t),
       })),
     });
   }

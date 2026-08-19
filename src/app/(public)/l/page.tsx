@@ -73,7 +73,7 @@ function LeagueGrid({ leagues }: { leagues: PublicLeague[] }) {
             className="border-line hover:border-line-strong hover:bg-surface group block h-full rounded-lg border p-4 transition-colors"
           >
             <div className="flex items-start gap-3">
-              <Crest name={league.name} size="xl" />
+              <Crest name={league.name} src={league.logoUrl} size="xl" />
               <div className="min-w-0 flex-1">
                 <p className="label" style={{ color: league.accentColor }}>
                   Est. {league.foundedYear}

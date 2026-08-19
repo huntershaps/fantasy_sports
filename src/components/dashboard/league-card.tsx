@@ -57,7 +57,12 @@ export function LeagueCard({
             <div className="mt-3">
               <p className="label mb-1">Next matchup</p>
               <div className="flex items-center gap-2">
-                <Crest name={form.next.opponent.name} size="sm" shape="round" />
+                <Crest
+                  name={form.next.opponent.name}
+                  src={form.next.opponent.logoUrl}
+                  size="sm"
+                  shape="round"
+                />
                 <p className="text-ink truncate text-sm">
                   Week {form.next.week} vs {form.next.opponent.name}
                 </p>

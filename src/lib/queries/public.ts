@@ -128,6 +128,7 @@ export const listPublicLeagues = cache(async () => {
       tagline: true,
       foundedYear: true,
       accentColor: true,
+      logoUrl: true,
       isArchived: true,
       _count: { select: { memberships: true, seasons: true } },
     },
