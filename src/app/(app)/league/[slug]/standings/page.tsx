@@ -52,6 +52,7 @@ export default async function StandingsPage({ params, searchParams }: Props) {
       <LeagueHeader
         slug={league.slug}
         name={league.name}
+        logoUrl={league.logoUrl}
         tagline={league.tagline}
         accentColor={league.accentColor}
         foundedYear={league.foundedYear}

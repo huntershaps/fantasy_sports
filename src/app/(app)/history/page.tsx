@@ -4,6 +4,7 @@ import { Trophy } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
 import { PageHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Crest } from "@/components/ui/crest";
 import { requireViewContext } from "@/lib/session";
 import { listLeagues } from "@/lib/queries/leagues";
 import { db } from "@/lib/db";
@@ -39,6 +40,7 @@ export default async function HistoryPage({
           select: {
             id: true,
             name: true,
+            logoUrl: true,
             wins: true,
             losses: true,
             ties: true,
@@ -140,8 +142,14 @@ export default async function HistoryPage({
               </div>
 
               {season.champion ? (
-                <p className="mt-2 flex flex-wrap items-baseline gap-x-2 text-md">
-                  <Trophy className="text-brand size-3.5 shrink-0 self-center" />
+                <p className="mt-2 flex flex-wrap items-center gap-x-2 text-md">
+                  <Trophy className="text-brand size-3.5 shrink-0" />
+                  <Crest
+                    name={season.champion.name}
+                    src={season.champion.logoUrl}
+                    size="md"
+                    shape="round"
+                  />
                   <span className="text-ink font-medium">
                     {isViewer ? "You" : manager?.name}
                   </span>

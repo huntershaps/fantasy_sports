@@ -1,0 +1,62 @@
+name: Sync leagues
+
+# Pulls the current season from ESPN into the production database.
+#
+# This runs the sync script directly against Neon rather than calling a route
+# on the deployed app. That keeps the app free of a publicly reachable sync
+# endpoint, and it sidesteps serverless execution limits — an in-season sync
+# with a full slate of box scores can run far longer than a scheduled function
+# is allowed to.
+
+on:
+  schedule:
+    # 09:00 UTC daily — roughly 5am Eastern, so a run lands after Sunday and
+    # Monday night games have finalised and well before anyone looks.
+    # GitHub runs cron on UTC and does not observe daylight saving, so this
+    # drifts an hour against Eastern across the season. That is fine here; if
+    # it ever matters, change the hour rather than trying to express local time.
+    - cron: "0 9 * * *"
+  # Lets you run it by hand from the Actions tab without waiting for the cron.
+  workflow_dispatch:
+    inputs:
+      season:
+        description: "Season year to sync (blank = current)"
+        required: false
+        type: string
+
+concurrency:
+  # Two syncs writing the same league at once would race on the same rows.
+  group: sync-leagues
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # The driver adapter means no query engine binary, but the generated
+      # client itself is gitignored and still has to be produced.
+      - run: pnpm prisma generate
+
+      - name: Sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CREDENTIAL_ENCRYPTION_KEY: ${{ secrets.CREDENTIAL_ENCRYPTION_KEY }}
+        run: |
+          if [ -n "${{ inputs.season }}" ]; then
+            pnpm exec tsx scripts/sync-league.mts --season "${{ inputs.season }}"
+          else
+            pnpm exec tsx scripts/sync-league.mts
+          fi

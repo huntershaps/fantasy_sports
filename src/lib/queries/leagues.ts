@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { db } from "@/lib/db";
+import { teamCrest } from "@/lib/images";
 import { accessibleLeagueIds, type SessionUser } from "@/lib/session";
 import { formatRecord } from "@/lib/utils";
 
@@ -127,6 +128,7 @@ export const getSeasonStandings = cache(async (seasonId: string) => {
     where: { seasonId },
     orderBy: [{ regularSeasonRank: "asc" }, { pointsFor: "desc" }],
     include: {
+      franchise: { select: { logoUrl: true } },
       memberships: {
         where: { isPrimary: true },
         include: { user: { select: { id: true, name: true, image: true } } },
@@ -138,7 +140,7 @@ export const getSeasonStandings = cache(async (seasonId: string) => {
     id: team.id,
     name: team.name,
     abbreviation: team.abbreviation,
-    logoUrl: team.logoUrl,
+    logoUrl: teamCrest(team),
     wins: team.wins,
     losses: team.losses,
     ties: team.ties,
@@ -163,6 +165,7 @@ export const getSeasonMatchups = cache(async (seasonId: string, week?: number) =
           id: true,
           name: true,
           logoUrl: true,
+          franchise: { select: { logoUrl: true } },
           memberships: { include: { user: { select: { id: true, name: true } } } },
         },
       },
@@ -171,6 +174,7 @@ export const getSeasonMatchups = cache(async (seasonId: string, week?: number) =
           id: true,
           name: true,
           logoUrl: true,
+          franchise: { select: { logoUrl: true } },
           memberships: { include: { user: { select: { id: true, name: true } } } },
         },
       },
@@ -188,14 +192,14 @@ export const getSeasonMatchups = cache(async (seasonId: string, week?: number) =
     home: {
       id: m.homeTeam.id,
       name: m.homeTeam.name,
-      logoUrl: m.homeTeam.logoUrl,
+      logoUrl: teamCrest(m.homeTeam),
       score: Number(m.homeScore),
       manager: m.homeTeam.memberships[0]?.user ?? null,
     },
     away: {
       id: m.awayTeam.id,
       name: m.awayTeam.name,
-      logoUrl: m.awayTeam.logoUrl,
+      logoUrl: teamCrest(m.awayTeam),
       score: Number(m.awayScore),
       manager: m.awayTeam.memberships[0]?.user ?? null,
     },
@@ -230,6 +234,7 @@ export const getUpcomingForUser = cache(
             id: true,
             name: true,
             logoUrl: true,
+            franchise: { select: { logoUrl: true } },
             wins: true,
             losses: true,
             memberships: { include: { user: { select: { id: true, name: true } } } },
@@ -240,6 +245,7 @@ export const getUpcomingForUser = cache(
             id: true,
             name: true,
             logoUrl: true,
+            franchise: { select: { logoUrl: true } },
             wins: true,
             losses: true,
             memberships: { include: { user: { select: { id: true, name: true } } } },
@@ -259,14 +265,14 @@ export const getUpcomingForUser = cache(
       home: {
         id: m.homeTeam.id,
         name: m.homeTeam.name,
-        logoUrl: m.homeTeam.logoUrl,
+        logoUrl: teamCrest(m.homeTeam),
         score: Number(m.homeScore),
         manager: m.homeTeam.memberships[0]?.user ?? null,
       },
       away: {
         id: m.awayTeam.id,
         name: m.awayTeam.name,
-        logoUrl: m.awayTeam.logoUrl,
+        logoUrl: teamCrest(m.awayTeam),
         score: Number(m.awayScore),
         manager: m.awayTeam.memberships[0]?.user ?? null,
       },
@@ -280,7 +286,7 @@ export const getLeagueRecords = cache(async (leagueId: string) => {
     orderBy: [{ category: "asc" }, { key: "asc" }],
     include: {
       holderUser: { select: { id: true, name: true, image: true } },
-      holderTeam: { select: { id: true, name: true } },
+      holderTeam: { select: { id: true, name: true, logoUrl: true } },
       holderPlayer: { select: { id: true, fullName: true, position: true } },
       season: { select: { year: true } },
       previous: { select: { displayValue: true, occurredOn: true, description: true } },

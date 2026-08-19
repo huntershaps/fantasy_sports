@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { FormStrip, Streak } from "@/components/ui/badge";
+import { Crest } from "@/components/ui/crest";
 import type { ManagerTeam, getTeamForm } from "@/lib/queries/career";
 import { cn, formatPoints, formatRecord, ordinal } from "@/lib/utils";
 
@@ -45,7 +46,8 @@ export function LeagueRow({
         </span>
       </div>
 
-      <div className="mt-1 flex items-baseline gap-2">
+      <div className="mt-1 flex items-center gap-2.5">
+        <Crest name={team.name} src={team.logoUrl} size="lg" shape="round" />
         <Link
           href={`/league/${team.league.slug}`}
           className="text-ink hover:text-brand truncate text-lg font-semibold transition-colors"

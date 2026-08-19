@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
 import { Section, SectionHeader } from "@/components/ui/layout";
+import { Crest } from "@/components/ui/crest";
 import { db } from "@/lib/db";
 import { assertLeagueAccess, requireViewContext } from "@/lib/session";
 import { cn, formatPoints } from "@/lib/utils";
@@ -34,6 +35,7 @@ export default async function MatchupPage({
         select: {
           id: true,
           name: true,
+          logoUrl: true,
           wins: true,
           losses: true,
           memberships: { include: { user: { select: { id: true, name: true } } } },
@@ -43,6 +45,7 @@ export default async function MatchupPage({
         select: {
           id: true,
           name: true,
+          logoUrl: true,
           wins: true,
           losses: true,
           memberships: { include: { user: { select: { id: true, name: true } } } },
@@ -115,6 +118,12 @@ export default async function MatchupPage({
                   "h-8 w-1 shrink-0 rounded-full",
                   matchup.isComplete && side.isWinner ? "bg-brand" : "bg-line",
                 )}
+              />
+              <Crest
+                name={side.team.name}
+                src={side.team.logoUrl}
+                size="xl"
+                shape="round"
               />
               <div className="min-w-0 flex-1">
                 <p

@@ -4,6 +4,7 @@ import { Trophy } from "lucide-react";
 import { PageContainer } from "@/components/shell/app-shell";
 import { PageHeader, Section, SectionHeader } from "@/components/ui/layout";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Crest } from "@/components/ui/crest";
 import { requireViewContext } from "@/lib/session";
 import { getManagerTeams } from "@/lib/queries/career";
 import { cn, formatPoints, formatRecord, ordinal } from "@/lib/utils";
@@ -51,11 +52,18 @@ export default async function TeamsPage() {
                   <li key={team.id}>
                     <Link
                       href={`/league/${team.league.slug}?season=${team.year}`}
-                      className="group hover:bg-surface -mx-3 flex flex-wrap items-baseline gap-x-5 gap-y-1 px-3 py-3 transition-colors"
+                      className="group hover:bg-surface -mx-3 flex flex-wrap items-center gap-x-5 gap-y-1 px-3 py-3 transition-colors"
                     >
                       <span className="figure-num tnum text-muted w-12 shrink-0 text-base">
                         {team.year}
                       </span>
+
+                      <Crest
+                        name={team.name}
+                        src={team.logoUrl}
+                        size="md"
+                        shape="round"
+                      />
 
                       <span className="flex min-w-[12rem] flex-1 items-baseline gap-2">
                         <span

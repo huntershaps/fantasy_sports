@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireApiRole } from "@/lib/session";
+import { isSafeImageUrl } from "@/lib/images";
 
 export type ProfileFormState = {
   ok?: boolean;
@@ -22,17 +23,6 @@ const schema = z.object({
     .optional()
     .or(z.literal("")),
 });
-
-/** Only http(s) images are accepted. A `javascript:` or `data:` URL here would
- *  be rendered into an <img src>, so the scheme is checked rather than trusted. */
-function isSafeImageUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
 
 export async function updateProfile(
   _prev: ProfileFormState,
@@ -109,9 +99,18 @@ export async function updateTeamLogo(
     return { error: "Only http and https image URLs are allowed." };
   }
 
+  // Pinned, or the next sync would overwrite it with whatever the provider
+  // reports — including the ESPN URLs that answer 401 to everyone, which is
+  // exactly the case a manager sets their own crest to work around.
+  const team = await db.fantasyTeam.findUnique({
+    where: { id: parsed.data.fantasyTeamId },
+    select: { lockedFields: true },
+  });
+  const lockedFields = [...new Set([...(team?.lockedFields ?? []), "logoUrl"])];
+
   await db.fantasyTeam.update({
     where: { id: parsed.data.fantasyTeamId },
-    data: { logoUrl: logoUrl || null },
+    data: { logoUrl: logoUrl || null, lockedFields },
   });
 
   revalidatePath("/", "layout");
