@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { assetIdFromRef } from "../src/lib/images";
@@ -7,8 +8,9 @@ import { assetIdFromRef } from "../src/lib/images";
  * Push crests from one database to another — the uploaded image bytes, plus
  * the logo columns on leagues, franchises and teams.
  *
+ *   pnpm exec tsx scripts/push-logos.mts --prod            # dry run against production
+ *   pnpm exec tsx scripts/push-logos.mts --prod --apply    # write
  *   SOURCE_URL=... TARGET_URL=... pnpm exec tsx scripts/push-logos.mts
- *   SOURCE_URL=... TARGET_URL=... pnpm exec tsx scripts/push-logos.mts --apply
  *
  * Why not scripts/copy-db.mts: that inserts with skipDuplicates, so it can
  * only populate an empty target. Here every row that needs to change already
@@ -23,11 +25,32 @@ import { assetIdFromRef } from "../src/lib/images";
  * and users on the target are never written.
  */
 const apply = process.argv.includes("--apply");
-const sourceUrl = process.env.SOURCE_URL;
-const targetUrl = process.env.TARGET_URL;
+
+/**
+ * --prod fills TARGET_URL from .env.production.local, so the production
+ * connection string never has to be pasted onto a command line or into shell
+ * history. It is an explicit flag rather than a fallback precisely because
+ * silently defaulting to production is how a dry run becomes an accident.
+ */
+const useProd = process.argv.includes("--prod");
+
+function productionUrl(): string {
+  const file = readFileSync(".env.production.local", "utf8");
+  const marker = "DATABASE_URL=";
+  const line = file
+    .split(String.fromCharCode(10))
+    .map((l) => l.trim())
+    .find((l) => l.startsWith(marker));
+  const value = line?.slice(marker.length).trim().replace(/^"|"$/g, "");
+  if (!value) throw new Error("No DATABASE_URL in .env.production.local");
+  return value;
+}
+
+const sourceUrl = process.env.SOURCE_URL ?? process.env.DATABASE_URL;
+const targetUrl = useProd ? productionUrl() : process.env.TARGET_URL;
 
 if (!sourceUrl || !targetUrl) {
-  console.error("Set SOURCE_URL and TARGET_URL.");
+  console.error("Set SOURCE_URL and TARGET_URL (or pass --prod for the target).");
   process.exit(1);
 }
 if (sourceUrl === targetUrl) {
